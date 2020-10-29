@@ -27,6 +27,7 @@ class GaussianVPG(nn.Module):
         
         self.gamma = gamma
         self.device = device
+        self.learning_rate = learning_rate
         self.N = sample_size
         self.delta = delta
         self.log_term = math.log(2*math.sqrt(self.N)/self.delta)
@@ -42,20 +43,38 @@ class GaussianVPG(nn.Module):
         #     self.action_dim = action_space.shape[0]
         #     self.policy = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device).to(self.device)
         # print(self.policy_hub.get_parameters())
-        self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=learning_rate)
+        self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
 
         
 
     def sample_policy(self):
         self.cur_policy = self.policy_hub.sample_policy()
         # print(self.cur_policy.get_parameters())
-        # self.cur_optimizer = optim.Adam(self.cur_policy.get_parameters(), lr=learning_rate)
+        # self.cur_optimizer = optim.Adam(self.cur_policy.get_parameters(), lr=self.learning_rate)
         return self.cur_policy
     
     def act(self, state):
         return self.policy.act(state, self.device)
-        
     
+    # def policy_update(self, memory):
+    #     print("policy update", memory.logprobs)
+    #     discounted_reward = []
+    #     Gt = 0
+    #     for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+    #         if is_terminal:
+    #             Gt = 0
+    #         Gt = reward + (self.gamma * Gt)
+    #         discounted_reward.insert(0, Gt)
+    #     policy_gradient = []
+    #     for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+    #         policy_gradient.append(-log_prob * Gt)
+        
+    #     loss = torch.stack(policy_gradient).sum()
+    #     loss.backward()
+    #     print("gradient of policy sample network")
+    #     for l in self.cur_policy.get_parameters():
+    #         print(l.grad)
+        
     def meta_update(self, memory):
         print("meta update", len(memory.rewards))
 
@@ -85,10 +104,11 @@ class GaussianVPG(nn.Module):
         # print(regularize_loss)
         regularize_loss = self.policy_hub.regularize_loss()
         print("reg loss", regularize_loss)
-        regularize_loss = math.sqrt((regularize_loss+self.log_term)/(2*self.N))
+        regularize_loss = torch.sqrt((regularize_loss+self.log_term)/(2*self.N))
         print("reg loss", regularize_loss)
         self.meta_optimizer.zero_grad()
-        loss = torch.stack(policy_gradient).sum() + regularize_loss
+        loss = 0.01 * torch.stack(policy_gradient).sum() + regularize_loss
+        print("loss", loss)
         loss.backward()
         # for param in self.policy_hub.get_parameters():
         #     print("grad", param.grad)

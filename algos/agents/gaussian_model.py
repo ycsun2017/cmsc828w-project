@@ -7,6 +7,9 @@ import numpy
 def soft_update(target, source, tau):
     target.data.copy_(target.data * (1.0 - tau) + source.data * tau)
 
+def hard_update(target, source):
+    target.data.copy_(source.data)
+
 class Gaussian(object):
     def __init__(self, mu, rho, device):
         super().__init__()

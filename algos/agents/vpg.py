@@ -10,6 +10,7 @@ from gym.spaces import Box, Discrete
 from .model import Actor, ContActor
 from .updates import vpg_update
 from torch.distributions import Categorical
+from .gaussian_model import hard_update
 
 class VPG(nn.Module):
     def __init__(self, state_space, action_space, hidden_sizes=(64,64), 
@@ -68,5 +69,16 @@ class VPG(nn.Module):
     def set_state_dict(self, state_dict, optim):
         self.policy.load_state_dict(state_dict)
         self.optimizer.load_state_dict(optim)
+    
+    def set_params(self, sample_policy):
+        for layer, sample_layer in zip(self.policy.action_layer, sample_policy.action_layer):
+            # print(type(layer), type(sample_layer))
+            if type(layer) == nn.Linear:
+                # print("layer.weight", layer.weight)
+                # print("sample_layer.weight", sample_layer.weight)
+                hard_update(layer.weight, sample_layer.weight)
+                hard_update(layer.bias, sample_layer.bias)
+                # print("layer.weight", layer.weight)
+                # print("sample_layer.weight", sample_layer.weight)
         
         

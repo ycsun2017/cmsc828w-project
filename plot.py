@@ -84,10 +84,11 @@ def hybird():
 if __name__ == "__main__":
     n = 10
     s = 2000
-    res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_prior_grow_0.5.txt".format(s,n), s, n)
+    res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_no_meta.txt".format(s,n), s, n)
+    res1 = read_rewards("results/CartPole-v0_vpg_s{}_n{}.txt".format(s,n), s, n)
     xs = list(range(s))
-    plt.plot(xs, smooth(res, 0.9), label="goal")
-#    plt.plot(xs, smooth(at1, 0.9),label="nobuf")
+    plt.plot(xs, smooth(res, 0.9), label="no_meta")
+    plt.plot(xs, smooth(res1, 0.9),label="meta")
 #    plt.plot(xs, smooth(at2, 0.9),label="buf")
 ##    plt.plot(xs, smooth(at3, 0.999),label="action")
 ##    plt.plot(xs, smooth(at4, 0.999),label="obs")

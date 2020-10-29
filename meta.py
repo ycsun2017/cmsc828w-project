@@ -30,6 +30,12 @@ parser.add_argument('--samples', type=int, default=2000)
 parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
 
+# meta settings
+parser.add_argument('--meta', dest='meta', action='store_true')
+parser.add_argument('--no-meta', dest='meta', action='store_false')
+parser.set_defaults(meta=True)
+parser.add_argument('--meta-episodes', type=int, default=10)
+
 # learner settings
 parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
@@ -72,18 +78,20 @@ if __name__ == '__main__':
     samples = args.samples
     max_episodes = args.episodes        # max training episodes
     max_steps = args.steps         # max timesteps in one episode
+    meta_episodes = args.meta_episodes
     learner = args.learner
-    
     lr = args.lr
     device = args.device
+    update_every = args.update_every
+    meta_update_every = args.meta_update_every
+    use_meta = args.meta
     ############ For All #########################
     gamma = 0.99                # discount factor
-    random_seed = 0 
     render = False
-    update_every = args.update_every
     save_every = 100
-    meta_update_every = args.meta_update_every
-
+    hidden_sizes = (4,4)
+    activation = nn.Tanh
+    
     torch.cuda.empty_cache()
     ########## file related 
     filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes)
@@ -91,6 +99,7 @@ if __name__ == '__main__':
         filename += "_run" + str(args.run)
         
     rew_file = open(args.resdir + filename + ".txt", "w")
+    meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
     # env = gym.make(env_name)
     env = make_env(0)
@@ -98,8 +107,8 @@ if __name__ == '__main__':
     if learner == "vpg":
         print("-----initialize meta policy-------")
         meta_policy = GaussianVPG(env.observation_space, env.action_space, meta_update_every,
-                hidden_sizes=(4,4), activation=nn.Tanh, gamma=gamma, device=device, learning_rate=lr)
-
+                hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, learning_rate=lr)
+        
     meta_memory = Memory()
     for sample in range(samples):
         print("#### Learning environment sample {}".format(sample))
@@ -107,25 +116,49 @@ if __name__ == '__main__':
         env = make_env(sample)
         # env.seed(sample)
         
-        ########## sample a learner
-        policy_net = meta_policy.sample_policy()
+        ########## sample a meta learner
+        sample_policy = meta_policy.sample_policy()
         print("-----sample a new policy-------")
-        print("weight of layer 0", policy_net.action_layer[0].weight) 
-
-        start_episode = 0
-        # load learner from checkpoint
-        if args.loadfile != "":
-            checkpoint = torch.load(args.moddir + args.loadfile)
-            print("load from ", args.moddir + args.loadfile)
-            policy_net.set_state_dict(checkpoint['model_state_dict'], checkpoint['optimizer_state_dict'])
-            start_episode = checkpoint['episode']
+        # print("weight of layer 0", sample_policy.action_layer[0].weight) 
         
+        ######### meta training
+        print("### meta learning")
+        start_episode = 0
+        for episode in range(start_episode, meta_episodes):
+            state = env.reset()
+            rewards = []
+            for steps in range(max_steps):
+                state_tensor, action_tensor, log_prob_tensor = sample_policy.act(state, device)
+                if isinstance(env.action_space, Discrete):
+                    action = action_tensor.item()
+                else:
+                    action = action_tensor.cpu().data.numpy().flatten()
+                new_state, reward, done, _ = env.step(action)
+                rewards.append(reward)
+                meta_memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
+                state = new_state
+                if done:
+                    meta_rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
+                        sample, episode, np.round(np.sum(rewards), decimals = 3)))
+                    break
+
+        if (sample+1) % meta_update_every == 0:
+            meta_policy.meta_update(meta_memory)
+            meta_memory.clear_memory()
+
+        ######### single-task learning
+        if learner == "vpg":
+            actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes, 
+            activation=activation, gamma=gamma, device=device, learning_rate=lr)
+            if use_meta:
+                actor_policy.set_params(sample_policy)
+
         memory = Memory()
         
         all_rewards = []
+        start_episode = 0
         timestep = 0
         
-        ######### training
         for episode in range(start_episode, max_episodes):
             state = env.reset()
             rewards = []
@@ -135,20 +168,18 @@ if __name__ == '__main__':
                 if render:
                     env.render()
                     
-                state_tensor, action_tensor, log_prob_tensor = policy_net.act(state, device)
+                state_tensor, action_tensor, log_prob_tensor = actor_policy.act(state)
                 
                 if isinstance(env.action_space, Discrete):
                     action = action_tensor.item()
                 else:
                     action = action_tensor.cpu().data.numpy().flatten()
                 new_state, reward, done, _ = env.step(action)
-                # print("state", new_state, "reward", reward)
+                
                 rewards.append(reward)
                 
-                # memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
-                # if episode == start_episode:
-                meta_memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
-                
+                memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
+
                 # if timestep % update_every == 0: #done or steps == max_steps-1: 
                     
                 #     policy_net.update_policy(memory)
@@ -158,8 +189,9 @@ if __name__ == '__main__':
                 state = new_state
                 
                 if done or steps == max_steps-1:
+                    actor_policy.update_policy(memory)
+                    memory.clear_memory()
                     all_rewards.append(np.sum(rewards))
-    #                 logger.info("episode: {}, total reward: {}\n".format(episode, np.round(np.sum(rewards), decimals = 3)))
                     rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                         sample, episode, np.round(np.sum(rewards), decimals = 3)))
                     break
@@ -171,9 +203,7 @@ if __name__ == '__main__':
                 #     'optimizer_state_dict': policy_net.get_state_dict()[1]
                 #     }, path)
                 
-        if (sample+1) % meta_update_every == 0:
-            meta_policy.meta_update(meta_memory)
-            meta_memory.clear_memory()
+        
 
         env.close()
 
