@@ -107,7 +107,7 @@ class GaussianVPG(nn.Module):
         regularize_loss = torch.sqrt((regularize_loss+self.log_term)/(2*self.N))
         print("reg loss", regularize_loss)
         self.meta_optimizer.zero_grad()
-        loss = 0.01 * torch.stack(policy_gradient).sum() + regularize_loss
+        loss = torch.stack(policy_gradient).sum() + regularize_loss
         print("loss", loss)
         loss.backward()
         # for param in self.policy_hub.get_parameters():
