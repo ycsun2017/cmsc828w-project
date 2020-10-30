@@ -19,7 +19,7 @@ class GaussianVPG(nn.Module):
     """
     def __init__(self, state_space, action_space, sample_size, hidden_sizes=(4,4), 
                  activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", 
-                 action_std=0.5, delta=0.1):
+                 action_std=0.5, delta=0.1, coeff=1.0):
         super(GaussianVPG, self).__init__()
         
         # deal with 1d state input
@@ -28,6 +28,7 @@ class GaussianVPG(nn.Module):
         self.gamma = gamma
         self.device = device
         self.learning_rate = learning_rate
+        self.coeff = coeff
         self.N = sample_size
         self.delta = delta
         self.log_term = math.log(2*math.sqrt(self.N)/self.delta)
@@ -107,7 +108,7 @@ class GaussianVPG(nn.Module):
         regularize_loss = torch.sqrt((regularize_loss+self.log_term)/(2*self.N))
         print("reg loss", regularize_loss)
         self.meta_optimizer.zero_grad()
-        loss = torch.stack(policy_gradient).sum() + regularize_loss
+        loss = self.coeff * torch.stack(policy_gradient).sum() + regularize_loss
         print("loss", loss)
         loss.backward()
         # for param in self.policy_hub.get_parameters():
