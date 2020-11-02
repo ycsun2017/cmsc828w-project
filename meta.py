@@ -66,7 +66,7 @@ def get_log(file_name):
     logger.addHandler(fh)  
     return logger
 
-def make_env(seed):
+def make_cart_env(seed):
     # need to tune
     # mass = 0.1 * np.random.randn() + 1.0
     # print("a new env of mass:", mass)
@@ -75,6 +75,11 @@ def make_env(seed):
     print("a new env of goal:", goal)
     env = NewCartPoleEnv(goal=goal)
     check_env(env, warn=True)
+    return env
+
+def make_car_env(seed):
+    # need to tune
+    env = gym.make("MountainCarContinuous-v0")
     return env
 
 if __name__ == '__main__':
@@ -96,7 +101,7 @@ if __name__ == '__main__':
     gamma = 0.99                # discount factor
     render = False
     save_every = 100
-    hidden_sizes = (16,16)  # need to tune
+    hidden_sizes = (4,4)  # need to tune
     activation = nn.Tanh  # need to tune
     
     torch.cuda.empty_cache()
@@ -112,8 +117,8 @@ if __name__ == '__main__':
     rew_file = open(args.resdir + filename + ".txt", "w")
     meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
-    # env = gym.make(env_name)
-    env = make_env(args.seed)
+    env = gym.make(env_name)
+    # env = make_env(args.seed)
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
@@ -125,7 +130,8 @@ if __name__ == '__main__':
     for sample in range(samples):
         print("#### Learning environment sample {}".format(sample))
         ########## creating environment
-        env = make_env(sample)
+        env = gym.make(env_name)
+        # env = make_env(sample)
         # env.seed(sample)
         
         ########## sample a meta learner

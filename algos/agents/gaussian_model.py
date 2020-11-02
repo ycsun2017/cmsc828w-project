@@ -167,6 +167,10 @@ class PolicyHub(nn.Module):
         # sample_mlp(self.gaussian_policy_layers, [self.state_dim] + self.hid + [self.action_dim], 
             # self.activation, nn.Softmax(dim=-1))
     
+    def sample_cont_policy(self, action_std, device):
+        return SampleContActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
+            self.hidden_sizes, self.activation, action_std, device)
+    
     def get_parameters(self):
         params = []
         for layer in self.gaussian_policy_layers:
@@ -253,15 +257,15 @@ class SampleActor(nn.Module):
                 params.append(layer.bias)
         return params
 
-class ContActor(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device):
-        super(ContActor, self).__init__()
+class SampleContActor(nn.Module):
+    def __init__(self, prior, state_dim, action_dim, hidden_sizes, activation, action_std, device):
+        super(SampleContActor, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
         else:
             hid = list(hidden_sizes)
         # actor
-        self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Tanh())
+        self.action_layer = sample_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Tanh())
         self.action_var = torch.full((action_dim,), action_std*action_std).to(device)
         
         

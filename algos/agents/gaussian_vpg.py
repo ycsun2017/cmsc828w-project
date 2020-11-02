@@ -34,28 +34,32 @@ class GaussianVPG(nn.Module):
         self.log_term = math.log(2*math.sqrt(self.N)/self.delta)
         self.update_prior_every = 10
         self.update = 0
+        self.cont_action = False
+        self.action_std = action_std
+        self.device = device
 
         if isinstance(action_space, Discrete):
             self.action_dim = action_space.n
             self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
-            # self.policy = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
-
-        # elif isinstance(action_space, Box):
-        #     self.action_dim = action_space.shape[0]
-        #     self.policy = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device).to(self.device)
+            
+        elif isinstance(action_space, Box):
+            self.cont_action = True
+            self.action_dim = action_space.shape[0]
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
 
         
 
     def sample_policy(self):
-        self.cur_policy = self.policy_hub.sample_policy()
+        if self.cont_action:
+            self.cur_policy = self.policy_hub.sample_cont_policy(self.action_std, self.device)
+        else:
+            self.cur_policy = self.policy_hub.sample_policy()
         # print(self.cur_policy.get_parameters())
         # self.cur_optimizer = optim.Adam(self.cur_policy.get_parameters(), lr=self.learning_rate)
         return self.cur_policy
     
-    def act(self, state):
-        return self.policy.act(state, self.device)
     
     # def policy_update(self, memory):
     #     print("policy update", memory.logprobs)

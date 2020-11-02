@@ -16,7 +16,16 @@ def read_rewards(filename, samples, episodes):
             rewards.append(rew_sum / episodes)
     return rewards
 
-def read_rewards_multi(samples, episodes, coeff, runs, nometa=False):
+def read_rewards_multi(filename, samples, episodes, runs):
+    rewards = []
+    for run in range(runs):
+        reward = read_rewards(filename+"_run{}.txt".format(run), samples,episodes)
+        rewards.append(reward)
+    rewards = np.array(rewards)
+    # print("rewards", rewards)
+    return np.mean(rewards, axis=0)
+
+def read_rewards_multi_old(samples, episodes, coeff, runs, nometa=False):
     rewards = []
     for run in range(runs):
         if nometa:
@@ -46,9 +55,10 @@ if __name__ == "__main__":
     s = 2000
     runs = 10
     xs = list(range(s))
-    for tau in [0.1,0.5,0.8,0.9]:
-        res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau{}.txt".format(s,n,tau), s, n)
-        plt.plot(xs, smooth(res, 0.999), label="tau"+str(tau))
+    for tau in [0.8]:
+        for every in [25,50]:
+            res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, 5)
+            plt.plot(xs, smooth(res, 0.9), label="every"+str(every))
     # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.5.txt".format(s,n), s, n)
     # plt.plot(xs, smooth(res, 0.999), label="tau0.5")
     # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.8.txt".format(s,n), s, n)
