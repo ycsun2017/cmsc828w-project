@@ -30,6 +30,7 @@ parser.add_argument('--samples', type=int, default=2000) # need to tune
 parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
 parser.add_argument('--goal', type=float, default=0.5) 
+parser.add_argument('--seed', default=1, type=int)
 
 # meta settings
 parser.add_argument('--meta', dest='meta', action='store_true')
@@ -67,12 +68,12 @@ def get_log(file_name):
 
 def make_env(seed):
     # need to tune
-    mass = 0.1 * np.random.randn() + 1.0
-    print("a new env of mass:", mass)
-    env = NewCartPoleEnv(masscart=mass)
-    # goal = args.goal * np.random.randn() + 0.0
-    # print("a new env of goal:", goal)
-    # env = NewCartPoleEnv(goal=goal)
+    # mass = 0.1 * np.random.randn() + 1.0
+    # print("a new env of mass:", mass)
+    # env = NewCartPoleEnv(masscart=mass)
+    goal = args.goal * np.random.randn() + 0.0
+    print("a new env of goal:", goal)
+    env = NewCartPoleEnv(goal=goal)
     check_env(env, warn=True)
     return env
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
     # env = gym.make(env_name)
-    env = make_env(0)
+    env = make_env(args.seed)
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
