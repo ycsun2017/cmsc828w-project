@@ -29,6 +29,7 @@ parser.add_argument('--env', type=str, default="CartPole-v0")
 parser.add_argument('--samples', type=int, default=2000) # need to tune
 parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
+parser.add_argument('--goal', type=float, default=0.5) 
 
 # meta settings
 parser.add_argument('--meta', dest='meta', action='store_true')
@@ -36,12 +37,13 @@ parser.add_argument('--no-meta', dest='meta', action='store_false')
 parser.set_defaults(meta=True)
 parser.add_argument('--meta-episodes', type=int, default=10)  # need to tune
 parser.add_argument('--coeff', type=float, default=0.5)  # need to tune
+parser.add_argument('--tau', type=float, default=0.5)  # need to tune
 
 # learner settings
 parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
 parser.add_argument('--update_every', type=int, default=300)
-parser.add_argument('--meta_update_every', type=int, default=25)  # need to tune
+parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
 
 # file settings
 parser.add_argument('--logdir', type=str, default="logs/")
@@ -64,13 +66,13 @@ def get_log(file_name):
     return logger
 
 def make_env(seed):
-     # need to tune
-    # mass = 0.1 * np.random.randn() + 1.0
-    # print("a new env of mass:", mass)
-    # env = NewCartPoleEnv(masscart=mass)
-    goal = 0.5 * np.random.randn() + 0.0
-    print("a new env of goal:", goal)
-    env = NewCartPoleEnv(goal=goal)
+    # need to tune
+    mass = 0.1 * np.random.randn() + 1.0
+    print("a new env of mass:", mass)
+    env = NewCartPoleEnv(masscart=mass)
+    # goal = args.goal * np.random.randn() + 0.0
+    # print("a new env of goal:", goal)
+    # env = NewCartPoleEnv(goal=goal)
     check_env(env, warn=True)
     return env
 
@@ -88,6 +90,7 @@ if __name__ == '__main__':
     meta_update_every = args.meta_update_every
     use_meta = args.meta
     coeff = args.coeff
+    tau = args.tau
     ############ For All #########################
     gamma = 0.99                # discount factor
     render = False
@@ -97,7 +100,11 @@ if __name__ == '__main__':
     
     torch.cuda.empty_cache()
     ########## file related 
-    filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) + "_c" + str(coeff)
+    filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
+        + "_every" + str(meta_update_every) \
+        + "_goal" + str(args.goal) + "_c" + str(coeff) + "_tau" + str(tau)
+    if not use_meta:
+        filename += "_nometa"
     if args.run >=0:
         filename += "_run" + str(args.run)
         
@@ -111,7 +118,7 @@ if __name__ == '__main__':
         print("-----initialize meta policy-------")
         meta_policy = GaussianVPG(env.observation_space, env.action_space, meta_update_every,
                 hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, 
-                learning_rate=lr, coeff=coeff)
+                learning_rate=lr, coeff=coeff, tau=tau)
         
     meta_memory = Memory()
     for sample in range(samples):

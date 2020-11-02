@@ -16,6 +16,20 @@ def read_rewards(filename, samples, episodes):
             rewards.append(rew_sum / episodes)
     return rewards
 
+def read_rewards_multi(samples, episodes, coeff, runs, nometa=False):
+    rewards = []
+    for run in range(runs):
+        if nometa:
+            reward = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c{}_nometa_run{}.txt".format(
+            samples,episodes,coeff, run), samples,episodes)
+        else:
+            reward = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c{}_run{}.txt".format(
+                samples,episodes,coeff, run), samples,episodes)
+        rewards.append(reward)
+    rewards = np.array(rewards)
+    # print("rewards", rewards)
+    return np.mean(rewards, axis=0)
+
 def smooth(scalars, weight):  # Weight between 0 and 1
     last = scalars[0]  # First value in the plot (first timestep)
     smoothed = list()
@@ -26,72 +40,27 @@ def smooth(scalars, weight):  # Weight between 0 and 1
 
     return smoothed
 
-def get_radius_list(radius, rewards):
-    r_list = []
-    for r in radius:
-        r_list.append(rewards[r].mean())
-    return r_list
-
-def get_fracs_list(fracs, radius, rewards):
-    f_list = []
-    for f in fracs:
-        f_list.append(rewards[f][radius].mean())
-    return f_list
-
-def get_eps_list(rewards):
-    return np.mean(rewards, axis=0)
-
-def read_noat(res_dir, env, learner, episodes, runs):
-    noat_rewards = []
-    for run in range(runs):
-        filename = "{}_{}_n{}_run{}.txt".format(env, learner, episodes, run)
-        reward = read_rewards(res_dir+filename, episodes)
-        noat_rewards.append(reward)
-        
-    return np.array(noat_rewards)
-
-def read_at(res_dir, env, learner, episodes, at_type, fracs, radius, runs):
-    rewards = {}
-    for f in fracs:
-        rewards[f] = {}
-        for r in radius:
-            rewards[f][r] = []
-            for run in range(runs):
-                filename = "{}_{}_n{}_{}_s0.05_m10_r{}_f{}_run{}.txt".format(
-                    env, learner, episodes, at_type, np.round(r, decimals = 1), 
-                    np.round(f, decimals = 1), run)
-                reward = read_rewards(res_dir+filename, episodes)
-                rewards[f][r].append(reward)
-            rewards[f][r] = np.array(rewards[f][r])
-    return rewards
-
-def hybird():
-    num_attacks = {}
-    for aim in ["action", "reward", "obs"]:
-        num_attacks[aim] = 0
-    
-    with open("results/hybird.txt", "r") as f:
-        line = f.readline()
-        while line:
-            find = re.findall(r'attack  (\w*)', line)
-            if find and find[0] != "noat":
-                num_attacks[find[0]] += 1
-                
-            line = f.readline()
-    print(num_attacks) # {'action': 295, 'reward': 173, 'obs': 32}
-
 
 if __name__ == "__main__":
     n = 10
     s = 2000
+    runs = 10
     xs = list(range(s))
-    res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_c0.5.txt".format(s,n), s, n)
-    plt.plot(xs, smooth(res, 0.9), label="meta")
-    # cs = [0.001, 0.01, 0.1, 0.5, 0.8]
-    
+    for tau in [0.1,0.5,0.8,0.9]:
+        res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau{}.txt".format(s,n,tau), s, n)
+        plt.plot(xs, smooth(res, 0.999), label="tau"+str(tau))
+    # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.5.txt".format(s,n), s, n)
+    # plt.plot(xs, smooth(res, 0.999), label="tau0.5")
+    # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.8.txt".format(s,n), s, n)
+    # plt.plot(xs, smooth(res, 0.999), label="tau0.8")
+
+    # nometa = read_rewards_multi(s,n,0.5,runs,nometa=True)
+    # plt.plot(xs, smooth(nometa, 0.9), label="meta")
+    # cs = [0.5]
     # for c in cs:
-    #     r = read_rewards("results/CartPole-v0_vpg_s{}_n{}_c{}.txt".format(s,n,c), s, n)
-    #     plt.plot(xs, smooth(r, 0.9),label="meta c="+str(c))
+    #     mean_rewards = read_rewards_multi(s,n,c,runs)
+    #     # r = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.3_c{}.txt".format(s,n,c), s, n)
+    #     plt.plot(xs, smooth(mean_rewards, 0.9),label="meta c="+str(c))
     
 #    plt.plot(xs, smooth(at2, 0.9),label="buf")
 ##    plt.plot(xs, smooth(at3, 0.999),label="action")

@@ -1,0 +1,25 @@
+I. code:
+1. continuous --> Yanchao
+2. maml --> Peihong
+3. algorithm 2
+
+ii. experiment:
+1. Cartpole. (tuning done) (multiple env settings) 
+(1) different goals. --> Yanchao (2) different physics (e.g. mass, length) --> Zhang Zhi
+
+2. LunarLander. --> Jingxi
+
+3. Mojuco. --> Yanchao Peihong Zhi Jingxi
+1) parameter tuning
+2) different env settings
+
+3. baseline. (maml)
+4. (optional) algorithm 2
+
+III. result we need to show:
+(every set of exp needs to be run for multiple runs (at least 10))
+
+plot: mean reward vs samples -- in different envs
+4 lines: our1, our2, maml, no_meta
+
+(optional) different meta_update_every: our1

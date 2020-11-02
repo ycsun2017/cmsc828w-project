@@ -19,7 +19,7 @@ class GaussianVPG(nn.Module):
     """
     def __init__(self, state_space, action_space, sample_size, hidden_sizes=(4,4), 
                  activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", 
-                 action_std=0.5, delta=0.1, coeff=1.0):
+                 action_std=0.5, delta=0.1, coeff=1.0, tau=0.5):
         super(GaussianVPG, self).__init__()
         
         # deal with 1d state input
@@ -37,7 +37,7 @@ class GaussianVPG(nn.Module):
 
         if isinstance(action_space, Discrete):
             self.action_dim = action_space.n
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
             # self.policy = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
 
         # elif isinstance(action_space, Box):

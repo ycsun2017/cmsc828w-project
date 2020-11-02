@@ -128,13 +128,13 @@ def sample_mlp(prior, sizes, activation, output_activation=nn.Identity()):
     return nn.Sequential(*layers)
 
 class PolicyHub(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau):
         super(PolicyHub, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_sizes = hidden_sizes
         self.activation = activation
-        self.tau = 0.5
+        self.tau = tau
 
         if type(hidden_sizes) == int:
             self.hid = [hidden_sizes]
