@@ -23,8 +23,8 @@ class Gaussian(object):
         return torch.log1p(torch.exp(self.rho))
     
     def sample(self):
-        epsilon = self.normal.sample(self.rho.size()).to(self.device)
-        return self.mu + self.sigma * epsilon
+        epsilon = self.normal.sample(self.rho.size())
+        return (self.mu + self.sigma * epsilon).to(self.device)
     
     def log_prob(self, input):
         return (-math.log(math.sqrt(2 * math.pi))
@@ -198,7 +198,7 @@ class PolicyHub(nn.Module):
         prior_sigmas = torch.cat(prior_sigmas)
         p = torch.distributions.Normal(cur_mus, cur_sigmas)
         q = torch.distributions.Normal(prior_mus, prior_sigmas)
-        loss = torch.distributions.kl_divergence(p, q).mean()
+        loss = torch.distributions.kl_divergence(p, q).mean().to(self.device)
         return loss
 
     def update_prior(self):
