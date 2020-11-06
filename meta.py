@@ -12,6 +12,7 @@ from algos.agents.ppo import PPO
 from algos.agents.gaussian_vpg import GaussianVPG
 from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
+from envs.new_lunar_lander import NewLunarLander
 from stable_baselines.common.env_checker import check_env
 
 import logging
@@ -75,6 +76,22 @@ def make_cart_env(seed):
     print("a new env of goal:", goal)
     env = NewCartPoleEnv(goal=goal)
     check_env(env, warn=True)
+    return env
+
+def make_lunar_env(seed):
+    # need to tune
+    # mass = 0.1 * np.random.randn() + 1.0
+    # print("a new env of mass:", mass)
+    # env = NewCartPoleEnv(masscart=mass)
+    goal = np.random.uniform(-1, 1)
+    print("a new env of goal:", goal)h
+    env = NewLunarLander(goal=goal)
+    check_env(env, warn=True)
+    return env
+
+def make_car_env(seed):
+    # need to tune
+    env = gym.make("MountainCarContinuous-v0")
     return env
 
 if __name__ == '__main__':
