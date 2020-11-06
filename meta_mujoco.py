@@ -12,7 +12,8 @@ from algos.agents.ppo import PPO
 from algos.agents.gaussian_vpg import GaussianVPG
 from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
-from envs.new_lunar_lander import NewLunarLander
+from envs.swimmer_rand_vel import SwimmerEnvRandVel
+from envs.half_cheetah_rand_dir import HalfCheetahEnvRandDir
 # from stable_baselines.common.env_checker import check_env
 
 import logging
@@ -26,7 +27,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', type=str, default="cpu")
 parser.add_argument('--run', type=int, default=-1)
 # env settings
-parser.add_argument('--env', type=str, default="CartPole-v0")
+parser.add_argument('--env', type=str, default="Swimmer")
 parser.add_argument('--samples', type=int, default=2000) # need to tune
 parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
@@ -79,20 +80,12 @@ def make_cart_env(seed):
     # check_env(env, warn=True)
     return env
 
-def make_lunar_env(seed):
-    # need to tune
-    # mass = 0.1 * np.random.randn() + 1.0
-    # print("a new env of mass:", mass)
-    # env = NewCartPoleEnv(masscart=mass)
-    goal = np.random.uniform(-1, 1)
-    print("a new env of goal:", goal)
-    env = NewLunarLander(goal=goal)
-    # check_env(env, warn=True)
-    return env
-
-def make_car_env(seed):
-    # need to tune
-    env = gym.make("MountainCarContinuous-v0")
+def make_mujoco_env(env="Swimmer"):
+    if env == "Swimmer":
+        env = SwimmerEnvRandVel()
+    elif env == "Antdir":
+        env = HalfCheetahEnvRandDir()
+#     check_env(env, warn=True)
     return env
 
 if __name__ == '__main__':
@@ -114,7 +107,7 @@ if __name__ == '__main__':
     gamma = 0.99                # discount factor
     render = False
     save_every = 100
-    hidden_sizes = tuple(args.hiddens) # (32,32)  # need to tune
+    hidden_sizes = tuple(args.hiddens)  # need to tune
     activation = nn.Tanh  # need to tune
     
     torch.cuda.empty_cache()
@@ -131,7 +124,7 @@ if __name__ == '__main__':
     meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
     # env = gym.make(env_name)
-    env = make_cart_env(args.seed)
+    env = make_mujoco_env(env_name)
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
@@ -144,7 +137,7 @@ if __name__ == '__main__':
         print("#### Learning environment sample {}".format(sample))
         ########## creating environment
         # env = gym.make(env_name)
-        env = make_cart_env(sample)
+        env = make_mujoco_env(env_name)
         # env.seed(sample)
         
         ########## sample a meta learner
