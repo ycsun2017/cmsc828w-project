@@ -40,12 +40,12 @@ class GaussianVPG(nn.Module):
 
         if isinstance(action_space, Discrete):
             self.action_dim = action_space.n
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau, self.device)
             
         elif isinstance(action_space, Box):
             self.cont_action = True
             self.action_dim = action_space.shape[0]
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau, self.device)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
 
@@ -55,7 +55,7 @@ class GaussianVPG(nn.Module):
         if self.cont_action:
             self.cur_policy = self.policy_hub.sample_cont_policy(self.action_std, self.device)
         else:
-            self.cur_policy = self.policy_hub.sample_policy()
+            self.cur_policy = self.policy_hub.sample_policy(self.device)
         # print(self.cur_policy.get_parameters())
         # self.cur_optimizer = optim.Adam(self.cur_policy.get_parameters(), lr=self.learning_rate)
         return self.cur_policy

@@ -128,13 +128,14 @@ def sample_mlp(prior, sizes, activation, output_activation=nn.Identity()):
     return nn.Sequential(*layers)
 
 class PolicyHub(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau, device):
         super(PolicyHub, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_sizes = hidden_sizes
         self.activation = activation
         self.tau = tau
+        self.device = device
 
         if type(hidden_sizes) == int:
             self.hid = [hidden_sizes]
@@ -142,7 +143,7 @@ class PolicyHub(nn.Module):
             self.hid = list(hidden_sizes)
         # actor
         self.gaussian_policy_layers = gaussian_mlp([self.state_dim] + self.hid + [self.action_dim], 
-            self.activation, nn.Softmax(dim=-1))
+            self.activation, nn.Softmax(dim=-1), self.device)
         for i, layer in enumerate(self.gaussian_policy_layers):
             print(i, "mu:", layer.weight_mu)
             print(i, "rho:", layer.weight_rho)
@@ -161,15 +162,15 @@ class PolicyHub(nn.Module):
             biases.append(layer.bias.sample())
         return weights, biases
     
-    def sample_policy(self):
+    def sample_policy(self, device):
         return SampleActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
-            self.hidden_sizes, self.activation)
+            self.hidden_sizes, self.activation).to(device)
         # sample_mlp(self.gaussian_policy_layers, [self.state_dim] + self.hid + [self.action_dim], 
             # self.activation, nn.Softmax(dim=-1))
     
     def sample_cont_policy(self, action_std, device):
         return SampleContActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
-            self.hidden_sizes, self.activation, action_std, device)
+            self.hidden_sizes, self.activation, action_std, device).to(device)
     
     def get_parameters(self):
         params = []
