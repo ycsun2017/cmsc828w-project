@@ -114,7 +114,10 @@ if __name__ == '__main__':
     gamma = 0.99                # discount factor
     render = False
     save_every = 100
-    hidden_sizes = tuple(args.hiddens) # (32,32)  # need to tune
+    if args.hiddens:
+        hidden_sizes = tuple(args.hiddens) # need to tune
+    else:
+        hidden_sizes = (32,32)
     activation = nn.Tanh  # need to tune
     
     torch.cuda.empty_cache()
