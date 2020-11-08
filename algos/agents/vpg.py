@@ -7,14 +7,14 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 from gym.spaces import Box, Discrete
-from .model import Actor, ContActor
+from .model import Actor, ContActor, Dynamics
 from .updates import vpg_update
 from torch.distributions import Categorical
 from .gaussian_model import hard_update
 
 class VPG(nn.Module):
-    def __init__(self, state_space, action_space, hidden_sizes=(64,64), 
-                 activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5):
+    def __init__(self, state_space, action_space, hidden_sizes=(64,64), activation=nn.Tanh, 
+        learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False):
         super(VPG, self).__init__()
         
         # deal with 1d state input
@@ -22,16 +22,27 @@ class VPG(nn.Module):
         
         self.gamma = gamma
         self.device = device
+        self.with_model = with_model
         
         if isinstance(action_space, Discrete):
+            self.discrete_action = True
             self.action_dim = action_space.n
             self.policy = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
+            if with_model:
+                self.model = Dynamics(state_dim, 1, hidden_sizes, activation, self.device).to(self.device)
         elif isinstance(action_space, Box):
+            self.discrete_action = False
             self.action_dim = action_space.shape[0]
             self.policy = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device).to(self.device)
-            
+            if with_model:
+                self.model = Dynamics(state_dim, self.action_dim, hidden_sizes, activation, self.device).to(self.device)
+
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
 
+        if with_model:
+            self.model_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
+            self.mse_loss = nn.MSELoss()
+            self.bce_loss = nn.BCELoss()
     
     def act(self, state):
         return self.policy.act(state, self.device)
@@ -61,6 +72,28 @@ class VPG(nn.Module):
 #        policy_gradient = torch.stack(policy_gradient).sum()
 #        policy_gradient.backward()
 #        self.optimizer.step()
+
+    def update_model(self, op_memory, batchsize=256):
+        states, actions, rewards, next_states, dones = op_memory.sample(batchsize)
+        # print("state", states)
+        # print("action", actions)
+        # print("rewards", rewards)
+        # print("dones", 1*dones)
+        if self.discrete_action:
+            actions = np.array([actions]).transpose()
+
+        pred_delta, pred_rewards, pred_dones = self.model.predict(states, actions) 
+        # print("preddone", pred_dones.flatten())
+        # print("dones", 1*dones)
+        loss = self.mse_loss(pred_rewards.flatten(), torch.tensor(rewards).float()) \
+                + self.mse_loss(pred_delta+torch.tensor(states).float(), torch.tensor(next_states).float()) \
+                + self.bce_loss(pred_dones.flatten(), torch.tensor(1*dones).float())
+        
+        self.model_optimizer.zero_grad()
+        # print("model loss:", loss.item())
+        loss.backward()
+        self.model_optimizer.step()
+        return loss.item()
     
     def get_state_dict(self):
         return self.policy.state_dict(), self.optimizer.state_dict()

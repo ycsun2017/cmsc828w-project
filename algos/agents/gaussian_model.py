@@ -144,15 +144,15 @@ class PolicyHub(nn.Module):
         # actor
         self.gaussian_policy_layers = gaussian_mlp([self.state_dim] + self.hid + [self.action_dim], 
             self.activation, nn.Softmax(dim=-1), self.device)
-        for i, layer in enumerate(self.gaussian_policy_layers):
-            print(i, "mu:", layer.weight_mu)
-            print(i, "rho:", layer.weight_rho)
-            print(i, "bmu:", layer.bias_mu)
-            print(i, "brho:", layer.bias_rho)
-            print(i, "pri mu:", layer.weight_prior_mu)
-            print(i, "pri rho:", layer.weight_prior_rho)
-            print(i, "pri bmu:", layer.bias_prior_mu)
-            print(i, "pri brho:", layer.bias_prior_rho)
+        # for i, layer in enumerate(self.gaussian_policy_layers):
+        #     print(i, "mu:", layer.weight_mu)
+        #     print(i, "rho:", layer.weight_rho)
+        #     print(i, "bmu:", layer.bias_mu)
+        #     print(i, "brho:", layer.bias_rho)
+            # print(i, "pri mu:", layer.weight_prior_mu)
+            # print(i, "pri rho:", layer.weight_prior_rho)
+            # print(i, "pri bmu:", layer.bias_prior_mu)
+            # print(i, "pri brho:", layer.bias_prior_rho)
 
     def sample_weights(self):
         weights = []
@@ -211,6 +211,18 @@ class PolicyHub(nn.Module):
             soft_update(layer.bias_prior_rho, layer.bias_rho, self.tau)
         # print("after soft update")
         # print(self.gaussian_policy_layers[0].bias_prior_mu)
+    
+    def load_params(self, source):
+        for target_layer, source_layer in zip(self.gaussian_policy_layers, source.gaussian_policy_layers):
+            hard_update(target_layer.weight_mu, source_layer.weight_mu)
+            hard_update(target_layer.weight_rho, source_layer.weight_rho)
+            hard_update(target_layer.bias_mu, source_layer.bias_mu)
+            hard_update(target_layer.bias_rho, source_layer.bias_rho)
+
+            hard_update(target_layer.weight_prior_mu, source_layer.weight_mu)
+            hard_update(target_layer.weight_prior_rho, source_layer.weight_rho)
+            hard_update(target_layer.bias_prior_mu, source_layer.bias_mu)
+            hard_update(target_layer.bias_prior_rho, source_layer.bias_rho)
 
 class SampleActor(nn.Module):
     def __init__(self, prior, state_dim, action_dim, hidden_sizes, activation):

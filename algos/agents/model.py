@@ -11,6 +11,32 @@ def mlp(sizes, activation, output_activation=nn.Identity()):
     
     return nn.Sequential(*layers)
 
+class Dynamics(nn.Module):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, device):
+        super(Dynamics, self).__init__()
+        if type(hidden_sizes) == int:
+            hid = [hidden_sizes]
+        else:
+            hid = list(hidden_sizes)
+        self.device = device
+        self.mu = mlp([state_dim+action_dim] + hid + [state_dim], activation)
+        # self.sigma = mlp([state_dim+action_dim] + hid + [state_dim], activation, nn.Tanh())
+        self.reward = mlp([state_dim+action_dim] + hid + [1], activation)
+        # self.normal = torch.distributions.Normal(0,1)
+        self.done = mlp([state_dim] + hid + [1], activation, nn.Sigmoid())
+
+    def predict(self, state, action):
+        state = torch.from_numpy(state).float().to(self.device)
+        action = torch.from_numpy(action).float().to(self.device)
+        cat = torch.cat([state, action],1)
+        mu = self.mu(cat)
+        # sigma = self.sigma(torch.cat([state, action],1))
+        reward = self.reward(cat)
+        # epsilon = self.normal.sample(state.size()).to(self.device)
+        # sampled = mu + sigma * epsilon
+        done = self.done(mu)
+        return mu, reward, done
+
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_sizes, activation):
         super(Actor, self).__init__()

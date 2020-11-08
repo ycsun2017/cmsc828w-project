@@ -23,3 +23,48 @@ plot: mean reward vs samples -- in different envs
 4 lines: our1, our2, maml, no_meta
 
 (optional) different meta_update_every: our1
+
+
+
+
+for peihong:
+
+initialize meta policy theta (VPG)
+use theta to sample trajectories
+use trajectories to compute gradient \grad{theta}  
+loss.backward(retain_graph=True); theta.grad 
+theta_i = (theta + alpha * grad{theta}).clone()
+sample new trajectories 
+backward() -> \grad{theta}  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

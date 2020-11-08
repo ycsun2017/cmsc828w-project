@@ -55,26 +55,19 @@ if __name__ == "__main__":
     s = 2000
     runs = 10
     xs = list(range(s))
-    for tau in [0.8]:
-        for every in [25,50]:
-            res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, 5)
-            plt.plot(xs, smooth(res, 0.9), label="every"+str(every))
-    # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.5.txt".format(s,n), s, n)
-    # plt.plot(xs, smooth(res, 0.999), label="tau0.5")
-    # res = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_tau0.8.txt".format(s,n), s, n)
-    # plt.plot(xs, smooth(res, 0.999), label="tau0.8")
+    # for tau in [0.8]:
+    #     for every in [25,50]:
+    #         res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
+    #     for every in [10,75]:
+    #         res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
 
-    # nometa = read_rewards_multi(s,n,0.5,runs,nometa=True)
-    # plt.plot(xs, smooth(nometa, 0.9), label="meta")
-    # cs = [0.5]
-    # for c in cs:
-    #     mean_rewards = read_rewards_multi(s,n,c,runs)
-    #     # r = read_rewards("results/CartPole-v0_vpg_s{}_n{}_goal0.3_c{}.txt".format(s,n,c), s, n)
-    #     plt.plot(xs, smooth(mean_rewards, 0.9),label="meta c="+str(c))
-    
-#    plt.plot(xs, smooth(at2, 0.9),label="buf")
-##    plt.plot(xs, smooth(at3, 0.999),label="action")
-##    plt.plot(xs, smooth(at4, 0.999),label="obs")
+    for tau in [0.5, 0.8]:
+        for every in [50]:
+            res = read_rewards("results/Swimmer_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
+            plt.plot(xs, smooth(res, 0.99), label="tau"+str(tau))
+
 ##    
     plt.legend()
     plt.xlabel("samples (envs)")
