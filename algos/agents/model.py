@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical, MultivariateNormal
+from algos.agents.gaussian_model import CloneLinear
 import numpy
 
 def mlp(sizes, activation, output_activation=nn.Identity()):
@@ -8,7 +9,15 @@ def mlp(sizes, activation, output_activation=nn.Identity()):
     for j in range(len(sizes)-1):
         act = activation() if j < len(sizes)-2 else output_activation
         layers += [nn.Linear(sizes[j], sizes[j+1]), act]
-    
+
+    return nn.Sequential(*layers)
+
+def clone_mlp(prior, sizes, activation, output_activation=nn.Identity()):
+    layers = []
+    for j in range(len(sizes) - 1):
+        act = activation() if j < len(sizes) - 2 else output_activation
+        layers += [CloneLinear(sizes[j], sizes[j + 1], prior[j*2]), act]
+
     return nn.Sequential(*layers)
 
 class Dynamics(nn.Module):
@@ -38,14 +47,17 @@ class Dynamics(nn.Module):
         return mu, reward, done
 
 class Actor(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, with_clone = False, prior = []):
         super(Actor, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
         else:
             hid = list(hidden_sizes)
         # actor
-        self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
+        if not with_clone:
+            self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
+        else:
+            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
         
         
     def act(self, state, device):
@@ -76,16 +88,18 @@ class Actor(nn.Module):
         return dist
 
 class ContActor(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device, with_clone = False, prior = []):
         super(ContActor, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
         else:
             hid = list(hidden_sizes)
         # actor
-        self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Tanh())
+        if not with_clone:
+            self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Tanh())
+        else:
+            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Tanh())
         self.action_var = torch.full((action_dim,), action_std*action_std).to(device)
-        
         
     def act(self, state, device):
         if type(state) == numpy.ndarray:

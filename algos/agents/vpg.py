@@ -14,7 +14,7 @@ from .gaussian_model import hard_update
 
 class VPG(nn.Module):
     def __init__(self, state_space, action_space, hidden_sizes=(64,64), activation=nn.Tanh, 
-        learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False):
+        learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False, with_meta = False):
         super(VPG, self).__init__()
         
         # deal with 1d state input
@@ -28,15 +28,21 @@ class VPG(nn.Module):
             self.discrete_action = True
             self.action_dim = action_space.n
             self.policy = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
+            if with_meta:
+                # self.policy_m = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
+                self.policy_m = Actor(state_dim, self.action_dim, hidden_sizes, activation, with_clone=True, prior=self.policy.action_layer).to(self.device)
             if with_model:
                 self.model = Dynamics(state_dim, 1, hidden_sizes, activation, self.device).to(self.device)
         elif isinstance(action_space, Box):
             self.discrete_action = False
             self.action_dim = action_space.shape[0]
             self.policy = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device).to(self.device)
+            if with_meta:
+                self.policy_m = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device, with_clone=True, prior=self.policy.action_layer).to(self.device)
             if with_model:
                 self.model = Dynamics(state_dim, self.action_dim, hidden_sizes, activation, self.device).to(self.device)
 
+        self.lr = learning_rate
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
 
         if with_model:
@@ -46,10 +52,34 @@ class VPG(nn.Module):
     
     def act(self, state):
         return self.policy.act(state, self.device)
-        
+
+    def act_policy_m(self, state):
+        return self.policy_m.act(state, self.device)
+
+    # def update_policy(self, memory):
+    #     discounted_reward = []
+    #     Gt = 0
+    #     for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+    #         if is_terminal:
+    #             Gt = 0
+    #         Gt = reward + (self.gamma * Gt)
+    #         discounted_reward.insert(0, Gt)
+    #
+    #     # Normalizing the rewards:
+    #     #        rewards = torch.tensor(rewards).to(self.device)
+    #     #        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
+    #
+    #     policy_gradient = []
+    #     for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+    #         policy_gradient.append(-log_prob * Gt)
+    #
+    #     self.optimizer.zero_grad()
+    #     policy_gradient = torch.stack(policy_gradient).sum()
+    #     policy_gradient.backward()
+    #     self.optimizer.step()
     
     def update_policy(self, memory):
-        
+
         vpg_update(self.optimizer, memory.logprobs, memory.rewards, memory.is_terminals, self.gamma)
         
 #        rewards = []
@@ -72,6 +102,29 @@ class VPG(nn.Module):
 #        policy_gradient = torch.stack(policy_gradient).sum()
 #        policy_gradient.backward()
 #        self.optimizer.step()
+
+    def update_policy_m(self, memory):
+        discounted_reward = []
+        Gt = 0
+        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+            if is_terminal:
+                Gt = 0
+            Gt = reward + (self.gamma * Gt)
+            discounted_reward.insert(0, Gt)
+
+        policy_gradient = []
+        for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+            policy_gradient.append(-log_prob * Gt)
+
+        self.optimizer.zero_grad()
+        policy_gradient = torch.stack(policy_gradient).sum()
+        policy_gradient.backward()
+
+        for layer, layer_m in zip(self.policy.action_layer, self.policy_m.action_layer):
+            if type(layer) == nn.Linear:
+                layer_m.weight = layer_m.weight - self.lr * layer.weight.grad
+                layer_m.bias = layer_m.bias - self.lr * layer.bias.grad
+
 
     def update_model(self, op_memory, batchsize=256):
         states, actions, rewards, next_states, dones = op_memory.sample(batchsize)
@@ -113,5 +166,3 @@ class VPG(nn.Module):
                 hard_update(layer.bias, sample_layer.bias)
                 # print("layer.weight", layer.weight)
                 # print("sample_layer.weight", sample_layer.weight)
-        
-        
