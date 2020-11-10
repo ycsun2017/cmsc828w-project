@@ -130,11 +130,11 @@ if __name__ == '__main__':
         actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes,
                            activation=activation, gamma=gamma, device=device, learning_rate=lr, with_meta=True)
 
+    meta_memory = Memory()
     for sample in range(samples):
         print("sample " + str(sample))
         env = make_mujoco_env(env_name)
 
-        meta_memory = Memory()
         memory = Memory()
 
         start_episode = 0
