@@ -12,7 +12,8 @@ from algos.agents.ppo import PPO
 from algos.agents.gaussian_vpg import GaussianVPG
 from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
-from stable_baselines.common.env_checker import check_env
+from envs.new_lunar_lander import NewLunarLander
+# from stable_baselines.common.env_checker import check_env
 
 import logging
 from datetime import datetime
@@ -45,10 +46,11 @@ parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
 parser.add_argument('--update_every', type=int, default=300)
 parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
+parser.add_argument('--hiddens', nargs='+', type=int)
 
 # file settings
 parser.add_argument('--logdir', type=str, default="logs/")
-parser.add_argument('--resdir', type=str, default="results/")
+parser.add_argument('--resdir', type=str, default="results_peihong/")
 parser.add_argument('--moddir', type=str, default="models/")
 parser.add_argument('--loadfile', type=str, default="")
 
@@ -74,7 +76,18 @@ def make_env(seed):
     goal = args.goal * np.random.randn() + 0.0
     print("a new env of goal:", goal)
     env = NewCartPoleEnv(goal=goal)
-    check_env(env, warn=True)
+    # check_env(env, warn=True)
+    return env
+
+def make_lunar_env(seed):
+    # need to tune
+    # mass = 0.1 * np.random.randn() + 1.0
+    # print("a new env of mass:", mass)
+    # env = NewCartPoleEnv(masscart=mass)
+    goal = np.random.uniform(-1, 1)
+    print("a new env of goal:", goal)
+    env = NewLunarLander(goal=goal)
+    # check_env(env, warn=True)
     return env
 
 if __name__ == '__main__':
@@ -96,14 +109,17 @@ if __name__ == '__main__':
     gamma = 0.99                # discount factor
     render = False
     save_every = 100
-    hidden_sizes = (16,16)  # need to tune
+    if args.hiddens:
+        hidden_sizes = tuple(args.hiddens) # need to tune
+    else:
+        hidden_sizes = (32,32)
     activation = nn.Tanh  # need to tune
     
     torch.cuda.empty_cache()
     ########## file related 
     filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
         + "_every" + str(meta_update_every) \
-        + "_goal" + str(args.goal) + "_c" + str(coeff) + "_tau" + str(tau)
+        + "_size" + str(hidden_sizes[0]) + "_c" + str(coeff) + "_tau" + str(tau)
     if not use_meta:
         filename += "_nometa"
     if args.run >=0:
@@ -113,7 +129,7 @@ if __name__ == '__main__':
     meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
     # env = gym.make(env_name)
-    env = make_env(args.seed)
+    env = make_cart_env(args.seed)
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
@@ -125,7 +141,8 @@ if __name__ == '__main__':
     for sample in range(samples):
         print("#### Learning environment sample {}".format(sample))
         ########## creating environment
-        env = make_env(sample)
+        # env = gym.make(env_name)
+        env = make_cart_env(sample)
         # env.seed(sample)
         
         ########## sample a meta learner
@@ -149,7 +166,7 @@ if __name__ == '__main__':
                 rewards.append(reward)
                 meta_memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
                 state = new_state
-                if done:
+                if done or steps == max_steps-1:
                     meta_rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                         sample, episode, np.round(np.sum(rewards), decimals = 3)))
                     break
@@ -220,5 +237,3 @@ if __name__ == '__main__':
         env.close()
 
     rew_file.close()
-    
-            

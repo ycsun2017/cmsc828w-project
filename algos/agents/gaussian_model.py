@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical, MultivariateNormal
 import numpy
+import math
 
 def soft_update(target, source, tau):
     target.data.copy_(target.data * (1.0 - tau) + source.data * tau)
@@ -23,8 +24,8 @@ class Gaussian(object):
         return torch.log1p(torch.exp(self.rho))
     
     def sample(self):
-        epsilon = self.normal.sample(self.rho.size()).to(self.device)
-        return self.mu + self.sigma * epsilon
+        epsilon = self.normal.sample(self.rho.size())
+        return (self.mu + self.sigma * epsilon).to(self.device)
     
     def log_prob(self, input):
         return (-math.log(math.sqrt(2 * math.pi))
@@ -110,6 +111,20 @@ class SampleLinear(nn.Module):
     def forward(self, input):
         return F.linear(input, self.weight, self.bias)
 
+
+class CloneLinear(nn.Module):
+    def __init__(self, in_features, out_features, prior: nn.Linear):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = prior.weight.clone()
+        self.bias = prior.bias.clone()
+        self.weight.retain_grad()
+        self.bias.retain_grad()
+
+    def forward(self, input):
+        return F.linear(input, self.weight, self.bias)
+
 def gaussian_mlp(sizes, activation, output_activation=nn.Identity(), device="cpu"):
     layers = []
     for j in range(len(sizes)-1):
@@ -128,13 +143,14 @@ def sample_mlp(prior, sizes, activation, output_activation=nn.Identity()):
     return nn.Sequential(*layers)
 
 class PolicyHub(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau, device):
         super(PolicyHub, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.hidden_sizes = hidden_sizes
         self.activation = activation
         self.tau = tau
+        self.device = device
 
         if type(hidden_sizes) == int:
             self.hid = [hidden_sizes]
@@ -142,16 +158,16 @@ class PolicyHub(nn.Module):
             self.hid = list(hidden_sizes)
         # actor
         self.gaussian_policy_layers = gaussian_mlp([self.state_dim] + self.hid + [self.action_dim], 
-            self.activation, nn.Softmax(dim=-1))
-        for i, layer in enumerate(self.gaussian_policy_layers):
-            print(i, "mu:", layer.weight_mu)
-            print(i, "rho:", layer.weight_rho)
-            print(i, "bmu:", layer.bias_mu)
-            print(i, "brho:", layer.bias_rho)
-            print(i, "pri mu:", layer.weight_prior_mu)
-            print(i, "pri rho:", layer.weight_prior_rho)
-            print(i, "pri bmu:", layer.bias_prior_mu)
-            print(i, "pri brho:", layer.bias_prior_rho)
+            self.activation, nn.Softmax(dim=-1), self.device)
+        # for i, layer in enumerate(self.gaussian_policy_layers):
+        #     print(i, "mu:", layer.weight_mu)
+        #     print(i, "rho:", layer.weight_rho)
+        #     print(i, "bmu:", layer.bias_mu)
+        #     print(i, "brho:", layer.bias_rho)
+            # print(i, "pri mu:", layer.weight_prior_mu)
+            # print(i, "pri rho:", layer.weight_prior_rho)
+            # print(i, "pri bmu:", layer.bias_prior_mu)
+            # print(i, "pri brho:", layer.bias_prior_rho)
 
     def sample_weights(self):
         weights = []
@@ -161,15 +177,15 @@ class PolicyHub(nn.Module):
             biases.append(layer.bias.sample())
         return weights, biases
     
-    def sample_policy(self):
+    def sample_policy(self, device):
         return SampleActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
-            self.hidden_sizes, self.activation)
+            self.hidden_sizes, self.activation).to(device)
         # sample_mlp(self.gaussian_policy_layers, [self.state_dim] + self.hid + [self.action_dim], 
             # self.activation, nn.Softmax(dim=-1))
     
     def sample_cont_policy(self, action_std, device):
         return SampleContActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
-            self.hidden_sizes, self.activation, action_std, device)
+            self.hidden_sizes, self.activation, action_std, device).to(device)
     
     def get_parameters(self):
         params = []
@@ -197,7 +213,7 @@ class PolicyHub(nn.Module):
         prior_sigmas = torch.cat(prior_sigmas)
         p = torch.distributions.Normal(cur_mus, cur_sigmas)
         q = torch.distributions.Normal(prior_mus, prior_sigmas)
-        loss = torch.distributions.kl_divergence(p, q).mean()
+        loss = torch.distributions.kl_divergence(p, q).mean().to(self.device)
         return loss
 
     def update_prior(self):
@@ -210,6 +226,18 @@ class PolicyHub(nn.Module):
             soft_update(layer.bias_prior_rho, layer.bias_rho, self.tau)
         # print("after soft update")
         # print(self.gaussian_policy_layers[0].bias_prior_mu)
+    
+    def load_params(self, source):
+        for target_layer, source_layer in zip(self.gaussian_policy_layers, source.gaussian_policy_layers):
+            hard_update(target_layer.weight_mu, source_layer.weight_mu)
+            hard_update(target_layer.weight_rho, source_layer.weight_rho)
+            hard_update(target_layer.bias_mu, source_layer.bias_mu)
+            hard_update(target_layer.bias_rho, source_layer.bias_rho)
+
+            hard_update(target_layer.weight_prior_mu, source_layer.weight_mu)
+            hard_update(target_layer.weight_prior_rho, source_layer.weight_rho)
+            hard_update(target_layer.bias_prior_mu, source_layer.bias_mu)
+            hard_update(target_layer.bias_prior_rho, source_layer.bias_rho)
 
 class SampleActor(nn.Module):
     def __init__(self, prior, state_dim, action_dim, hidden_sizes, activation):

@@ -8,9 +8,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 from gym.spaces import Box, Discrete
-from .model import Actor, ContActor
+from .model import Actor, ContActor, Dynamics
 from .gaussian_model import PolicyHub
 from .updates import vpg_update
+from algos.memory import Memory
 from torch.distributions import Categorical
 
 class GaussianVPG(nn.Module):
@@ -39,13 +40,14 @@ class GaussianVPG(nn.Module):
         self.device = device
 
         if isinstance(action_space, Discrete):
+            self.cont_action = False
             self.action_dim = action_space.n
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau, self.device)
             
         elif isinstance(action_space, Box):
             self.cont_action = True
             self.action_dim = action_space.shape[0]
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau, self.device)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
 
@@ -55,7 +57,7 @@ class GaussianVPG(nn.Module):
         if self.cont_action:
             self.cur_policy = self.policy_hub.sample_cont_policy(self.action_std, self.device)
         else:
-            self.cur_policy = self.policy_hub.sample_policy()
+            self.cur_policy = self.policy_hub.sample_policy(self.device)
         # print(self.cur_policy.get_parameters())
         # self.cur_optimizer = optim.Adam(self.cur_policy.get_parameters(), lr=self.learning_rate)
         return self.cur_policy
@@ -115,6 +117,7 @@ class GaussianVPG(nn.Module):
         loss = self.coeff * torch.stack(policy_gradient).sum() + regularize_loss
         print("loss", loss)
         loss.backward()
+        # print("grad", self.policy_hub.gaussian_policy_layers[0].weight_mu.grad)
         # for param in self.policy_hub.get_parameters():
         #     print("grad", param.grad)
         self.meta_optimizer.step()
@@ -124,13 +127,86 @@ class GaussianVPG(nn.Module):
         # self.update += 1
         # if self.update % self.update_prior_every:
         self.policy_hub.update_prior()
+
+    def meta_update_with_model(self, models, state, maxiter=3):
+        # generate a copy of the policy distribution
+        print("build a copy")
+        temp_hub = PolicyHub(self.policy_hub.state_dim, self.policy_hub.action_dim, 
+            self.policy_hub.hidden_sizes, self.policy_hub.activation, self.policy_hub.tau, self.device)
+        temp_hub.load_params(self.policy_hub)
+        temp_optimizer = optim.SGD(temp_hub.get_parameters(), lr=self.learning_rate)
+        
+        # print("weight", temp_hub.gaussian_policy_layers[0].weight_mu)
+        # print("weight prior", temp_hub.gaussian_policy_layers[0].weight_prior_mu)
+
+        for k in range(maxiter):
+            sample_policy = temp_hub.sample_policy(self.device)
+            temp_optimizer.zero_grad()
+            model_losses = []
+            for i, model in enumerate(models):
+                model_loss = self.get_loss_with_model(sample_policy, model, state)
+                print("model", i, "loss", model_loss)
+                model_losses.append(model_loss)
+            regularize_loss = temp_hub.regularize_loss()
+            regularize_loss = torch.sqrt((regularize_loss+self.log_term)/(2*self.N))
+            print("reg loss", regularize_loss)
+            loss = torch.stack(model_losses).sum() + regularize_loss
+            print("loss", loss)
+            loss.backward()
+            print("grad norm", torch.norm(temp_hub.gaussian_policy_layers[0].weight_mu.grad))
+            temp_optimizer.step()
+        
+        # print("after weight", temp_hub.gaussian_policy_layers[0].weight_mu)
+        # print("after weight prior", temp_hub.gaussian_policy_layers[0].weight_prior_mu)
+
+        self.policy_hub.load_params(temp_hub)
+
+    def get_loss_with_model(self, policy, model, start_state, episodes=100, max_steps=50):
+        memory = Memory()
+        for episode in range(episodes):
+            state = start_state
+            rewards = []
+            for steps in range(max_steps):
+                state_tensor, action_tensor, log_prob_tensor = policy.act(state, self.device)
+                if not self.cont_action:
+                    action = action_tensor.item()
+                else:
+                    action = action_tensor.cpu().data.numpy().flatten()
+                # print("cur state action", state, action)
+                new_state, reward, done_prob = model.predict(np.array([state]), np.array([[action]]))
+                new_state = new_state[0].detach().numpy() + np.array(state_tensor)
+                reward = reward[0].item()
+                done = True if done_prob[0].item() > 0.5 else False
+                rewards.append(reward)
+                # print(state_tensor, action_tensor, log_prob_tensor, reward, done)
+                # converted_done = np.where(done.detach().numpy().flatten() > 0.5, True, False)
+                memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
+                state = new_state
+                if done:
+                    break
+        
+        discounted_reward = []
+        Gt = 0
+        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+            if is_terminal:
+                Gt = 0
+            Gt = reward + (self.gamma * Gt)
+            discounted_reward.insert(0, Gt)
+        policy_gradient = []
+        for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+            policy_gradient.append(-log_prob * Gt)
+    
+        policy_gradient = torch.stack(policy_gradient).sum()
+
+        return policy_gradient
+
     
     def get_state_dict(self):
         return self.policy.state_dict(), self.optimizer.state_dict()
     
-    
     def set_state_dict(self, state_dict, optim):
         self.policy.load_state_dict(state_dict)
         self.optimizer.load_state_dict(optim)
+    
         
         
