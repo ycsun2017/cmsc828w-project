@@ -53,20 +53,27 @@ def smooth(scalars, weight):  # Weight between 0 and 1
 if __name__ == "__main__":
     n = 10
     s = 2000
-    runs = 10
+    runs = 2
     xs = list(range(s))
-    # for tau in [0.8]:
-    #     for every in [25,50]:
-    #         res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-    #         plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
-    #     for every in [10,75]:
-    #         res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-    #         plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
+    # for tau in [0.5]:
+        # for every in [25,50]:
+        #     res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+        #     plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
+        # for every in [25,75]:
+        #     res = read_rewards_multi("results/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+        #     plt.plot(xs, smooth(res, 0.9), label="every"+str(every))
 
-    for tau in [0.5, 0.8]:
-        for every in [50]:
-            res = read_rewards("results/Swimmer_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
-            plt.plot(xs, smooth(res, 0.99), label="tau"+str(tau))
+    # for tau in [0.5, 0.8]:
+    #     for every in [50]:
+    #         res = read_rewards("results/Swimmer_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
+    #         plt.plot(xs, smooth(res, 0.99), label="tau"+str(tau))
+    
+    for tau in [0.8]:
+        for every in [25,75]:
+            res = read_rewards("results/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
+            plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
+    # res = read_rewards("results/Swimmer_vpg_s{}_n{}_every50_size32_c0.5_tau0.5_nometa.txt".format(s,n), s, n)
+    # plt.plot(xs, smooth(res, 0.99), label="nometa")
 
 ##    
     plt.legend()

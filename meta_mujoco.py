@@ -14,6 +14,10 @@ from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
 from envs.swimmer_rand_vel import SwimmerEnvRandVel
 from envs.half_cheetah_rand_dir import HalfCheetahEnvRandDir
+from envs.half_cheetah_rand_vel import HalfCheetahEnvRandVel
+from envs.ant_rand_dir import AntEnvRandDir
+from envs.ant_rand_goal import AntEnvRandGoal
+from envs.ant_rand_vel import AntEnvRandVel
 # from stable_baselines.common.env_checker import check_env
 
 import logging
@@ -83,8 +87,16 @@ def make_cart_env(seed):
 def make_mujoco_env(env="Swimmer"):
     if env == "Swimmer":
         env = SwimmerEnvRandVel()
-    elif env == "Antdir":
+    elif env == "Halfcdir":
         env = HalfCheetahEnvRandDir()
+    elif env == "Halfcvel":
+        env = HalfCheetahEnvRandVel()
+    elif env == "Antdir":
+        env = AntEnvRandDir()
+    elif env == "Antgol":
+        env = AntEnvRandGoal()
+    elif env == "Antvel":
+        env = AntEnvRandVel()
 #     check_env(env, warn=True)
     return env
 
