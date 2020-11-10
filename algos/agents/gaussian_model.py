@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical, MultivariateNormal
 import numpy
+import math
 
 def soft_update(target, source, tau):
     target.data.copy_(target.data * (1.0 - tau) + source.data * tau)
@@ -107,6 +108,20 @@ class SampleLinear(nn.Module):
         self.bias.retain_grad()
         # self.register_parameter('bias', self.bias)
     
+    def forward(self, input):
+        return F.linear(input, self.weight, self.bias)
+
+
+class CloneLinear(nn.Module):
+    def __init__(self, in_features, out_features, prior: nn.Linear):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.weight = prior.weight.clone()
+        self.bias = prior.bias.clone()
+        self.weight.retain_grad()
+        self.bias.retain_grad()
+
     def forward(self, input):
         return F.linear(input, self.weight, self.bias)
 

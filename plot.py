@@ -67,6 +67,7 @@ if __name__ == "__main__":
     #     for every in [50]:
     #         res = read_rewards("results/Swimmer_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
     #         plt.plot(xs, smooth(res, 0.99), label="tau"+str(tau))
+
     
     for tau in [0.8]:
         for every in [25,75]:
@@ -74,6 +75,10 @@ if __name__ == "__main__":
             plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
     # res = read_rewards("results/Swimmer_vpg_s{}_n{}_every50_size32_c0.5_tau0.5_nometa.txt".format(s,n), s, n)
     # plt.plot(xs, smooth(res, 0.99), label="nometa")
+
+
+    res = read_rewards("results_peihong/CartPole-v0_vpg_s2000_n10_c0.5.txt", s, n)
+    plt.plot(xs, smooth(res, 0.99))
 
 ##    
     plt.legend()
