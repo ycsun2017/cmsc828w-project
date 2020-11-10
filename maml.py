@@ -108,7 +108,9 @@ if __name__ == '__main__':
 
     torch.cuda.empty_cache()
     ########## file related
-    filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) + "_c" + str(coeff)
+    filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
+        + "_every" + str(meta_update_every) \
+        + "_size" + str(hidden_sizes[0]) 
     if args.run >= 0:
         filename += "_run" + str(args.run)
 
