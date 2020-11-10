@@ -28,20 +28,20 @@ class VPG(nn.Module):
             self.discrete_action = True
             self.action_dim = action_space.n
             self.policy = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
-            if with_meta:
-                # self.policy_m = Actor(state_dim, self.action_dim, hidden_sizes, activation).to(self.device)
-                self.policy_m = Actor(state_dim, self.action_dim, hidden_sizes, activation, with_clone=True, prior=self.policy.action_layer).to(self.device)
             if with_model:
                 self.model = Dynamics(state_dim, 1, hidden_sizes, activation, self.device).to(self.device)
         elif isinstance(action_space, Box):
             self.discrete_action = False
             self.action_dim = action_space.shape[0]
             self.policy = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device).to(self.device)
-            if with_meta:
-                self.policy_m = ContActor(state_dim, self.action_dim, hidden_sizes, activation, action_std, self.device, with_clone=True, prior=self.policy.action_layer).to(self.device)
             if with_model:
                 self.model = Dynamics(state_dim, self.action_dim, hidden_sizes, activation, self.device).to(self.device)
 
+        self.state_dim = state_dim
+        self.action_space = action_space
+        self.hidden_sizes = hidden_sizes
+        self.action_std = action_std
+        self.activation = activation
         self.lr = learning_rate
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
 
@@ -104,6 +104,7 @@ class VPG(nn.Module):
 #        self.optimizer.step()
 
     def update_policy_m(self, memory):
+        # caculate policy gradient
         discounted_reward = []
         Gt = 0
         for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
@@ -120,11 +121,21 @@ class VPG(nn.Module):
         policy_gradient = torch.stack(policy_gradient).sum()
         policy_gradient.backward()
 
-        for layer, layer_m in zip(self.policy.action_layer, self.policy_m.action_layer):
-            if type(layer) == nn.Linear:
-                layer_m.weight = (layer_m.weight - self.lr * layer.weight.grad).clone()
-                layer_m.bias = (layer_m.bias - self.lr * layer.bias.grad).clone()
+        # create policy_m
+        if isinstance(self.action_space, Discrete):
+            policy_m = Actor(self.state_dim, self.action_dim, self.hidden_sizes, self.activation, with_clone=True,
+                                  prior=self.policy.action_layer, lr = self.lr).to(self.device)
+        elif isinstance(self.action_space, Box):
+            policy_m = ContActor(self.state_dim, self.action_dim, self.hidden_sizes, self.activation, self.action_std,
+                                      self.device, with_clone=True, prior=self.policy.action_layer, lr = self.lr).to(self.device)
 
+        # # apply gradient descent
+        # for layer, layer_m in zip(self.policy.action_layer, policy_m.action_layer):
+        #     if type(layer) == nn.Linear:
+        #         layer_m.weight = (layer_m.weight - self.lr * layer.weight.grad).clone()
+        #         layer_m.bias = (layer_m.bias - self.lr * layer.bias.grad).clone()
+
+        return policy_m
 
     def update_model(self, op_memory, batchsize=256):
         states, actions, rewards, next_states, dones = op_memory.sample(batchsize)

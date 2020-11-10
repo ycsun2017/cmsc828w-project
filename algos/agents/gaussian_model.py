@@ -113,12 +113,16 @@ class SampleLinear(nn.Module):
 
 
 class CloneLinear(nn.Module):
-    def __init__(self, in_features, out_features, prior: nn.Linear):
+    def __init__(self, in_features, out_features, prior: nn.Linear, lr = -1):
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.weight = prior.weight.clone()
-        self.bias = prior.bias.clone()
+        if lr == -1:
+            self.weight = prior.weight.clone()
+            self.bias = prior.bias.clone()
+        else:
+            self.weight = (prior.weight - lr * prior.weight.grad).clone()
+            self.bias = (prior.bias - lr * prior.bias.grad).clone()
         self.weight.retain_grad()
         self.bias.retain_grad()
 

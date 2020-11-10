@@ -12,11 +12,11 @@ def mlp(sizes, activation, output_activation=nn.Identity()):
 
     return nn.Sequential(*layers)
 
-def clone_mlp(prior, sizes, activation, output_activation=nn.Identity()):
+def clone_mlp(prior, sizes, activation, output_activation=nn.Identity(), lr = -1):
     layers = []
     for j in range(len(sizes) - 1):
         act = activation() if j < len(sizes) - 2 else output_activation
-        layers += [CloneLinear(sizes[j], sizes[j + 1], prior[j*2]), act]
+        layers += [CloneLinear(sizes[j], sizes[j + 1], prior[j*2], lr = lr), act]
 
     return nn.Sequential(*layers)
 
@@ -47,7 +47,7 @@ class Dynamics(nn.Module):
         return mu, reward, done
 
 class Actor(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, with_clone = False, prior = []):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, with_clone = False, prior = [], lr = -1):
         super(Actor, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
@@ -57,7 +57,7 @@ class Actor(nn.Module):
         if not with_clone:
             self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
         else:
-            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
+            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1), lr = lr)
         
         
     def act(self, state, device):
@@ -88,7 +88,7 @@ class Actor(nn.Module):
         return dist
 
 class ContActor(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device, with_clone = False, prior = []):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device, with_clone = False, prior = [], lr = -1):
         super(ContActor, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
@@ -98,7 +98,7 @@ class ContActor(nn.Module):
         if not with_clone:
             self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Tanh())
         else:
-            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Tanh())
+            self.action_layer = clone_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Tanh(), lr = lr)
         self.action_var = torch.full((action_dim,), action_std*action_std).to(device)
         
     def act(self, state, device):

@@ -147,8 +147,6 @@ if __name__ == '__main__':
             state = env.reset()
             rewards = []
             for steps in range(max_steps):
-                timestep += 1
-
                 if render:
                     env.render()
 
@@ -166,34 +164,38 @@ if __name__ == '__main__':
                 state = new_state
 
                 if done or steps == max_steps - 1:
-                    actor_policy.update_policy_m(memory)
-                    memory.clear_memory()
                     rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                         sample, episode, np.round(np.sum(rewards), decimals=3)))
                     break
 
-        state = env.reset()
-        rewards = []
-        for steps in range(max_steps):
-            if render:
-                env.render()
+        # obtain policy_m and apple gradient descent
+        policy_m = actor_policy.update_policy_m(memory)
+        memory.clear_memory()
 
-            state_tensor, action_tensor, log_prob_tensor = actor_policy.act_policy_m(state)
+        # obtain meta_memory using updated policy_m
+        for episode in range(start_episode, max_episodes):
+            state = env.reset()
+            rewards = []
+            for steps in range(max_steps):
+                if render:
+                    env.render()
 
-            if isinstance(env.action_space, Discrete):
-                action = action_tensor.item()
-            else:
-                action = action_tensor.cpu().data.numpy().flatten()
-            new_state, reward, done, _ = env.step(action)
+                state_tensor, action_tensor, log_prob_tensor = policy_m.act(state, device)
 
-            rewards.append(reward)
-            meta_memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
-            state = new_state
+                if isinstance(env.action_space, Discrete):
+                    action = action_tensor.item()
+                else:
+                    action = action_tensor.cpu().data.numpy().flatten()
+                new_state, reward, done, _ = env.step(action)
 
-            if done or steps == max_steps - 1:
-                meta_rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
-                    sample, episode, np.round(np.sum(rewards), decimals=3)))
-                break
+                rewards.append(reward)
+                meta_memory.add(state_tensor, action_tensor, log_prob_tensor, reward, done)
+                state = new_state
+
+                if done or steps == max_steps - 1:
+                    meta_rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
+                        sample, episode, np.round(np.sum(rewards), decimals=3)))
+                    break
 
         if (sample + 1) % meta_update_every == 0:
             actor_policy.update_policy(meta_memory)
