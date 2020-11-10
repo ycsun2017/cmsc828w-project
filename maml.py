@@ -12,7 +12,7 @@ from algos.agents.ppo import PPO
 from algos.agents.gaussian_vpg import GaussianVPG
 from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
-from envs.swimmer_rand_vel import SwimmerEnvRandVel
+# from envs.swimmer_rand_vel import SwimmerEnvRandVel
 # from stable_baselines.common.env_checker import check_env
 
 import logging
