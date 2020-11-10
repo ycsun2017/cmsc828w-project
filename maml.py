@@ -128,7 +128,6 @@ if __name__ == '__main__':
 
         start_episode = 0
         timestep = 0
-        all_rewards = []
 
         for episode in range(start_episode, max_episodes):
             state = env.reset()
@@ -155,7 +154,6 @@ if __name__ == '__main__':
                 if done or steps == max_steps - 1:
                     actor_policy.update_policy_m(memory)
                     memory.clear_memory()
-                    all_rewards.append(np.sum(rewards))
                     rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                         sample, episode, np.round(np.sum(rewards), decimals=3)))
                     break
@@ -179,12 +177,13 @@ if __name__ == '__main__':
             state = new_state
 
             if done or steps == max_steps - 1:
-                actor_policy.update_policy(meta_memory)
-                meta_memory.clear_memory()
-                all_rewards.append(np.sum(rewards))
                 meta_rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                             sample, episode, np.round(np.sum(rewards), decimals=3)))
                 break
+
+        if (sample+1) % meta_update_every == 0:
+            actor_policy.update_policy(meta_memory)
+            meta_memory.clear_memory()
 
         env.close()
 
