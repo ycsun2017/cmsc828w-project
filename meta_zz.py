@@ -31,6 +31,8 @@ parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
 parser.add_argument('--goal', type=float, default=0.5) 
 parser.add_argument('--seed', default=1, type=int)
+parser.add_argument('--mass', type=float, default=1.0) 
+
 
 # meta settings
 parser.add_argument('--meta', dest='meta', action='store_true')
@@ -48,7 +50,7 @@ parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
 
 # file settings
 parser.add_argument('--logdir', type=str, default="logs/")
-parser.add_argument('--resdir', type=str, default="results/")
+parser.add_argument('--resdir', type=str, default="results_zz/")
 parser.add_argument('--moddir', type=str, default="models/")
 parser.add_argument('--loadfile', type=str, default="")
 
@@ -66,15 +68,20 @@ def get_log(file_name):
     logger.addHandler(fh)  
     return logger
 
-def make_env(seed):
+def make_cart_env(seed):
     # need to tune
-    # mass = 0.1 * np.random.randn() + 1.0
-    # print("a new env of mass:", mass)
-    # env = NewCartPoleEnv(masscart=mass)
-    goal = args.goal * np.random.randn() + 0.0
-    print("a new env of goal:", goal)
-    env = NewCartPoleEnv(goal=goal)
+    mass = 0.1 * np.random.randn() + args.mass 
+    print("a new env of mass:", mass)
+    env = NewCartPoleEnv(masscart=mass)
+    # goal = args.goal * np.random.randn() + 0.0
+    # print("a new env of goal:", goal)
+    # env = NewCartPoleEnv(goal=goal)
     check_env(env, warn=True)
+    return env
+
+def make_car_env(seed):
+    # need to tune
+    env = gym.make("MountainCarContinuous-v0")
     return env
 
 if __name__ == '__main__':
@@ -96,14 +103,15 @@ if __name__ == '__main__':
     gamma = 0.99                # discount factor
     render = False
     save_every = 100
-    hidden_sizes = (16,16)  # need to tune
+    hidden_sizes = (4,4)  # need to tune
     activation = nn.Tanh  # need to tune
     
     torch.cuda.empty_cache()
     ########## file related 
     filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
         + "_every" + str(meta_update_every) \
-        + "_goal" + str(args.goal) + "_c" + str(coeff) + "_tau" + str(tau)
+        + "_goal" + str(args.goal) + "_c" + str(coeff) + "_tau" + str(tau) \
+            + "_mass" + str(args.mass)
     if not use_meta:
         filename += "_nometa"
     if args.run >=0:
@@ -112,8 +120,8 @@ if __name__ == '__main__':
     rew_file = open(args.resdir + filename + ".txt", "w")
     meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
 
-    # env = gym.make(env_name)
-    env = make_env(args.seed)
+    env = gym.make(env_name)
+    # env = make_env(args.seed)
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
@@ -125,7 +133,8 @@ if __name__ == '__main__':
     for sample in range(samples):
         print("#### Learning environment sample {}".format(sample))
         ########## creating environment
-        env = make_env(sample)
+        env = gym.make(env_name)
+        # env = make_env(sample)
         # env.seed(sample)
         
         ########## sample a meta learner
