@@ -122,8 +122,8 @@ class VPG(nn.Module):
 
         for layer, layer_m in zip(self.policy.action_layer, self.policy_m.action_layer):
             if type(layer) == nn.Linear:
-                layer_m.weight = layer_m.weight - self.lr * layer.weight.grad
-                layer_m.bias = layer_m.bias - self.lr * layer.bias.grad
+                layer_m.weight = (layer_m.weight - self.lr * layer.weight.grad).clone()
+                layer_m.bias = (layer_m.bias - self.lr * layer.bias.grad).clone()
 
 
     def update_model(self, op_memory, batchsize=256):

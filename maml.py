@@ -100,7 +100,10 @@ if __name__ == '__main__':
     gamma = 0.99  # discount factor
     render = False
     save_every = 100
-    hidden_sizes = (16, 16)  # need to tune
+    if args.hiddens:
+        hidden_sizes = tuple(args.hiddens) # need to tune
+    else:
+        hidden_sizes = (32,32)
     activation = nn.Tanh  # need to tune
 
     torch.cuda.empty_cache()
@@ -119,11 +122,11 @@ if __name__ == '__main__':
         actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes,
                            activation=activation, gamma=gamma, device=device, learning_rate=lr, with_meta=True)
 
+    meta_memory = Memory()
     for sample in range(samples):
         print("sample " + str(sample))
         env = make_cart_env(sample)
 
-        meta_memory = Memory()
         memory = Memory()
 
         start_episode = 0
