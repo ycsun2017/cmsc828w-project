@@ -51,7 +51,7 @@ parser.add_argument('--hiddens', nargs='+', type=int)
 
 # file settings
 parser.add_argument('--logdir', type=str, default="logs/")
-parser.add_argument('--resdir', type=str, default="results_peihong/")
+parser.add_argument('--resdir', type=str, default="results_maml/")
 parser.add_argument('--moddir', type=str, default="models/")
 parser.add_argument('--loadfile', type=str, default="")
 
@@ -124,8 +124,8 @@ if __name__ == '__main__':
     if args.run >= 0:
         filename += "_run" + str(args.run)
 
-    rew_file = open(args.resdir + filename + ".txt", "w")
-    meta_rew_file = open(args.resdir + "meta_" + filename + ".txt", "w")
+    rew_file = open(args.resdir + "maml_" + filename + ".txt", "w")
+    meta_rew_file = open(args.resdir + "mamlmeta_" + filename + ".txt", "w")
 
     env = make_mujoco_env(env_name)
 
