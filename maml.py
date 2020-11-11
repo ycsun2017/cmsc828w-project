@@ -37,7 +37,7 @@ parser.add_argument('--seed', default=1, type=int)
 parser.add_argument('--meta', dest='meta', action='store_true')
 parser.add_argument('--no-meta', dest='meta', action='store_false')
 parser.set_defaults(meta=True)
-parser.add_argument('--meta-episodes', type=int, default=10)  # need to tune
+parser.add_argument('--meta_episodes', type=int, default=10)  # need to tune
 parser.add_argument('--coeff', type=float, default=0.5)  # need to tune
 parser.add_argument('--tau', type=float, default=0.5)  # need to tune
 
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         memory.clear_memory()
 
         # obtain meta_memory using updated policy_m
-        for episode in range(start_episode, max_episodes):
+        for episode in range(start_episode, meta_episodes):
             state = env.reset()
             rewards = []
             for steps in range(max_steps):
