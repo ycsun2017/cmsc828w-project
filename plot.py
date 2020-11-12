@@ -160,41 +160,113 @@ if __name__ == "__main__":
 
 
 ##### Swimmer N comparison
-    dirname = "results_swimmer/"
-    s = 1000
+    # dirname = "results_swimmer/"
+    # s = 1000
+    # runs = 10
+    # xs = list(range(s))
+    # linestyle = {10:"dashdot", 25: "dotted", 50: "solid", 75: "dashed"}
+    # for tau in [0.5]:
+    #     for every in [10,25,50]:
+    #         res, std = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1=  0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color = 'b', label="PB-LRL N=" + str(every), linestyle=linestyle[every])
+    #         plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
+
+
+    # for tau in [0.5]:
+    #     for every in [50]:
+    #         res,std  = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1 = 0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
+    #         plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
+
+    # plt.legend()
+    # plt.xlabel("Tasks (environments)")
+    # plt.ylabel("Mean reward")
+    # # plt.show()
+    # plt.savefig("plots/swimmer_N.png", format="png")
+
+    
+    
+    
+    
+    
+    ##### cartpole baseline comparison
+    dirname = "results/goal0.1"
+    s = 2000
     runs = 10
     xs = list(range(s))
-    linestyle = {10:"dashdot", 25: "dotted", 50: "solid", 75: "dashed"}
-    for tau in [0.5]:
-        for every in [10,25,50]:
-            res, std = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-            mu1 = np.array(smooth(res, 0.99))
-            sigma1=  0.1 * np.array(smooth(std, 0.99))
-            plt.plot(xs, mu1, color = 'b', label="PB-LRL N=" + str(every), linestyle=linestyle[every])
-            plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
+
+    # for tau in [0.5]:
+    #     for every in [25]:
+    #         # if every in [10,75]:
+    #         #     res, std = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         # else:
+    #         #     res, std = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         res, std = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1=  0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color = 'b', label="PB-LRL")
+    #         plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
 
 
     for tau in [0.5]:
-        for every in [50]:
-            res,std  = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
+        for every in [25]:
+            res, std = read_rewards_multi("results_peihong/goal0.1/maml_CartPole-v0_vpg_s{}_n{}_every{}_size32".format(s,n,every), s, n, runs)
             mu1 = np.array(smooth(res, 0.99))
             sigma1 = 0.1 * np.array(smooth(std, 0.99))
-            plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
-            plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
+            plt.plot(xs, mu1, color="#2ca02c", label="MAML")
+            plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#2ca02c", alpha=0.1)
+
+    # for tau in [0.5]:
+    #     for every in [50]:
+    #         res,std  = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every50_size32_c0.5_tau0.5_nometa".format(s,n), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1 = 0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
+    #         plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
 
     plt.legend()
     plt.xlabel("Tasks (environments)")
     plt.ylabel("Mean reward")
-    # plt.show()
-    plt.savefig("plots/swimmer_N.png", format="png")
+    plt.show()
+    # plt.savefig("plots/cart_goal0.1.png", format="png")
+    # tikzplotlib.save("plots/swimmer.tex")
+    
+    
+    
+    
+##### CartPole N comparison
+    # dirname = "results"
+    # s = 2000
+    # runs = 10
+    # xs = list(range(s))
+    # linestyle = {10:"dashdot", 25: "dotted", 50: "solid", 75: "dashed"}
+    # for tau in [0.8]:
+    #     for every in [25,50,75]:
+    #         if every in [10,75]:
+    #             res, std = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         else:
+    #             res, std = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_every{}_goal0.5_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+            
+    #         mu1 = np.array(smooth(res, 0.995))
+    #         sigma1=  0.1 * np.array(smooth(std, 0.995))
+    #         plt.plot(xs, mu1, color = 'b', label="PB-LRL N=" + str(every), linestyle=linestyle[every])
+    #         plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+    # for tau in [0.8]:
+    #     for every in [50]:
+    #         res,std  = read_rewards_multi(dirname+"/CartPole-v0_vpg_s{}_n{}_goal0.5_c0.5_nometa".format(s,n), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.995))
+    #         sigma1 = 0.1 * np.array(smooth(std, 0.995))
+    #         plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
+    #         plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
+
+    # plt.legend()
+    # plt.xlabel("Tasks (environments)")
+    # plt.ylabel("Mean reward")
+    # # plt.show()
+    # plt.savefig("plots/cart_N.png", format="png")
