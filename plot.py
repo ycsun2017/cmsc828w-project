@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
+import tikzplotlib
 import numpy as np
 import re
 import math
-
 
 def read_rewards(filename, samples, episodes):
     rewards = []
@@ -60,14 +60,15 @@ if __name__ == "__main__":
     MEDIUM_SIZE = 25
     BIGGER_SIZE = 25
 
-    plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
-    plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+    # plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
+    # plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
     plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
     plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
     plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc('legend', fontsize=MEDIUM_SIZE)  # legend fontsize
+    plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
+    plt.rcParams["figure.figsize"] = (10,8)
 
 # for no_meta
     # for tau in [0.8]:
@@ -82,38 +83,34 @@ if __name__ == "__main__":
     #         plt.plot(xs, smooth(res, 0.99), label="no_meta")
 
 #meta
-    for tau in [0.8]:
-        for every in [50]:
-            res = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-            plt.plot(xs, smooth(res, 0.99), label="every" + str(every))
-
-
-
-
-    # res = read_rewards_multi("results/Lunar_vpg_s{}_n{}_c0.5_maml".format(s,n), s, n, runs)
-    # plt.plot(xs, smooth(res, 0.99), label="every"+str(50))
-
-
-    #     for every in [10,75]:
-    #         res = read_rewards_multi("results/CartPole-v0_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-    #         plt.plot(xs, smooth(res, 0.99), label="every"+str(every))
-
     # for tau in [0.8]:
     #     for every in [50]:
-    #         res = read_rewards("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}.txt".format(s,n,every,tau), s, n)
-    #         plt.plot(xs, smooth(res, 0.99), label="tau"+str(tau))
+    #         res = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         plt.plot(xs, smooth(res, 0.99), label="every" + str(every))
 
-##
+
+## Swimmer
+    plt.style.use("ggplot")
+    dirname = "results_swimmer/"
+    s = 1000
+    xs = list(range(s))
+    res = read_rewards_multi(dirname+"Swimmer_vpg_s{}_n{}_every50_size32_c0.5_tau0.5_nometa".format(s,n), s, n, runs)
+    plt.plot(xs, smooth(res, 0.99), label="single-task")
+
+    for tau in [0.5]:
+        for every in [25, 50, 75]:
+            res = read_rewards_multi(dirname+"Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+            plt.plot(xs, smooth(res, 0.99), label="meta_N="+str(every))
+
 
 
 
     plt.legend()
     plt.xlabel("Tasks (environments)")
     plt.ylabel("Mean reward")
-    plt.show()
-#    plt.savefig("plots/hybird_vpg_cart.png", format="png")
-    
-    
+    # plt.show()
+    plt.savefig("plots/swimmer.eps", format="eps")
+    tikzplotlib.save("plots/swimmer.tex")
     
 
     
