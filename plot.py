@@ -69,39 +69,39 @@ if __name__ == "__main__":
     plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-    plt.rcParams["figure.figsize"] = (10,8)
+    plt.rcParams["figure.figsize"] = (20,10)
 
 # for baselines
-    for tau in [0.8]:
-        for every in [50]:
-            res, std = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-            mu1 = np.array(smooth(res, 0.99))
-            sigma1=  0.1 * np.array(smooth(std, 0.99))
-            plt.plot(xs, mu1, color = 'b', label="PB-LRL")
-            plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
+#     for tau in [0.8]:
+#         for every in [50]:
+#             res, std = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+#             mu1 = np.array(smooth(res, 0.99))
+#             sigma1=  0.1 * np.array(smooth(std, 0.99))
+#             plt.plot(xs, mu1, color = 'b', label="PB-LRL")
+#             plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
 
-#meta
-    # for tau in [0.8]:
-    #     for every in [50]:
-    #         res = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-    #         plt.plot(xs, smooth(res, 0.99), label="every" + str(every))
+# #meta
+#     # for tau in [0.8]:
+#     #     for every in [50]:
+#     #         res = read_rewards_multi("results/n50/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+#     #         plt.plot(xs, smooth(res, 0.99), label="every" + str(every))
 
-    for tau in [0.8]:
-        for every in [50]:
-            res, std = read_rewards_multi("results/maml_Lunar_vpg_s{}_n{}_every{}_size32".format(s,n,every), s, n, runs)
-            mu1 = np.array(smooth(res, 0.99))
-            sigma1 = 0.1 * np.array(smooth(std, 0.99))
-            plt.plot(xs, mu1, label="MAML")
-            plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, alpha=0.1)
+#     for tau in [0.8]:
+#         for every in [50]:
+#             res, std = read_rewards_multi("results/maml_Lunar_vpg_s{}_n{}_every{}_size32".format(s,n,every), s, n, runs)
+#             mu1 = np.array(smooth(res, 0.99))
+#             sigma1 = 0.1 * np.array(smooth(std, 0.99))
+#             plt.plot(xs, mu1, label="MAML")
+#             plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, alpha=0.1)
 
 
-    for tau in [0.8]:
-        for every in [50]:
-            res,std  = read_rewards_multi("results/no_meta/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
-            mu1 = np.array(smooth(res, 0.99))
-            sigma1 = 0.1 * np.array(smooth(std, 0.99))
-            plt.plot(xs, mu1, label="Singe-task")
-            plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, alpha=0.1)
+#     for tau in [0.8]:
+#         for every in [50]:
+#             res,std  = read_rewards_multi("results/no_meta/Lunar_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
+#             mu1 = np.array(smooth(res, 0.99))
+#             sigma1 = 0.1 * np.array(smooth(std, 0.99))
+#             plt.plot(xs, mu1, label="Singe-task")
+#             plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, alpha=0.1)
 
 # #meta
 #     for tau in [0.8]:
@@ -119,29 +119,74 @@ if __name__ == "__main__":
     # plt.plot(xs, smooth(res, 0.99), label="every"+str(50))
 
 
-## Swimmer
-    plt.style.use("ggplot")
+##### Swimmer baseline comparison
+    # dirname = "results_swimmer/"
+    # s = 1000
+    # runs = 10
+    # xs = list(range(s))
+
+    # for tau in [0.5]:
+    #     for every in [25]:
+    #         res, std = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1=  0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color = 'b', label="PB-LRL")
+    #         plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
+
+
+    # for tau in [0.5]:
+    #     for every in [25]:
+    #         res, std = read_rewards_multi("results_swimmer_maml/Swimmer_vpg_s{}_n{}_every{}_size32".format(s,n,every), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1 = 0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color="#2ca02c", label="MAML")
+    #         plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#2ca02c", alpha=0.1)
+
+    # for tau in [0.5]:
+    #     for every in [50]:
+    #         res,std  = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
+    #         mu1 = np.array(smooth(res, 0.99))
+    #         sigma1 = 0.1 * np.array(smooth(std, 0.99))
+    #         plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
+    #         plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
+
+    # plt.legend()
+    # plt.xlabel("Tasks (environments)")
+    # plt.ylabel("Mean reward")
+    # # plt.show()
+    # plt.savefig("plots/swimmer.png", format="png")
+    # # tikzplotlib.save("plots/swimmer.tex")
+    
+
+
+##### Swimmer N comparison
     dirname = "results_swimmer/"
     s = 1000
+    runs = 10
     xs = list(range(s))
-    res = read_rewards_multi(dirname+"Swimmer_vpg_s{}_n{}_every50_size32_c0.5_tau0.5_nometa".format(s,n), s, n, runs)
-    plt.plot(xs, smooth(res, 0.99), label="single-task")
+    linestyle = {10:"dashdot", 25: "dotted", 50: "solid", 75: "dashed"}
+    for tau in [0.5]:
+        for every in [10,25,50]:
+            res, std = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
+            mu1 = np.array(smooth(res, 0.99))
+            sigma1=  0.1 * np.array(smooth(std, 0.99))
+            plt.plot(xs, mu1, color = 'b', label="PB-LRL N=" + str(every), linestyle=linestyle[every])
+            plt.fill_between(xs,mu1+ sigma1, mu1-sigma1, color='b', alpha=0.1)
+
 
     for tau in [0.5]:
-        for every in [25, 50, 75]:
-            res = read_rewards_multi(dirname+"Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}".format(s,n,every,tau), s, n, runs)
-            plt.plot(xs, smooth(res, 0.99), label="meta_N="+str(every))
-
-
-
+        for every in [50]:
+            res,std  = read_rewards_multi(dirname+"/Swimmer_vpg_s{}_n{}_every{}_size32_c0.5_tau{}_nometa".format(s,n,every,tau), s, n, runs)
+            mu1 = np.array(smooth(res, 0.99))
+            sigma1 = 0.1 * np.array(smooth(std, 0.99))
+            plt.plot(xs, mu1, color="#ff7f0e", label="Singe-task")
+            plt.fill_between(xs, mu1 + sigma1, mu1 - sigma1, color="#ff7f0e", alpha=0.1)
 
     plt.legend()
     plt.xlabel("Tasks (environments)")
     plt.ylabel("Mean reward")
     # plt.show()
-    plt.savefig("plots/swimmer.eps", format="eps")
-    tikzplotlib.save("plots/swimmer.tex")
-    
+    plt.savefig("plots/swimmer_N.png", format="png")
 
     
     
