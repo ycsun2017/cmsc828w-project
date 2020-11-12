@@ -4,14 +4,13 @@
 #BSUB -G guests 
 #BSUB -W 720
 #BSUB -nnodes 4 
-#BSUB -o /g/g16/zhang65/src/sitepackages/llrl/experiments/log.txt 
+#BSUB -o /g/g16/zhang65/src/sitepackages/llrl/experiments/log3.txt 
 
 ##### These are shell commands
 date
-source /g/g16/zhang65/.conda/bin/activate
+#source /g/g16/zhang65/.conda/bin/activate
 conda activate py37
-export LD_LIBRARY_PATH=/g/g16/zhang65/.conda/pkgs/cudatoolkit-10.2.89-684.g752c550/compat:/g/g16/zhang65/.conda/pkgs/cudatoolkit-10.2.89-684.g752c550
-a/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/g/g16/zhang65/.conda/pkgs/cudatoolkit-10.2.89-684.g752c550a/lib:$LD_LIBRARY_PATH
 
 ##### Launch parallel job using srun
 ##### 
@@ -28,7 +27,7 @@ do
   do
     for k in "${masses[@]}";
     do
-        jsrun -n 1 -a 1 -g 1 -c 1 python maml_zz.py --run ${i} meta_update_every ${j} --mass ${k}
+        jsrun -n 1 -a 1 -g 1 -c 1 python mml_zzz.py --run ${i} --meta_update_every ${j} --mass ${k}
     done
     echo $k
    done 
