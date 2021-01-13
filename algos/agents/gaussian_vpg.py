@@ -13,6 +13,9 @@ from .gaussian_model import PolicyHub
 from .updates import vpg_update
 from algos.memory import Memory
 from torch.distributions import Categorical
+from torch.optim.lr_scheduler import StepLR
+
+SCHEDULE_RATE = 0.9
 
 class GaussianVPG(nn.Module):
     """
@@ -20,7 +23,7 @@ class GaussianVPG(nn.Module):
     """
     def __init__(self, state_space, action_space, sample_size, hidden_sizes=(4,4), 
                  activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", 
-                 action_std=0.5, delta=0.1, coeff=1.0, tau=0.5):
+                 action_std=0.5, delta=0.1, coeff=1.0, tau=0.5, schedule="linear"):
         super(GaussianVPG, self).__init__()
         
         # deal with 1d state input
@@ -50,7 +53,11 @@ class GaussianVPG(nn.Module):
             self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, tau, self.device)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
-
+        
+        self.schedule = schedule
+        if self.schedule == "linear":
+            print("linear rate")
+            self.meta_scheduler = StepLR(self.meta_optimizer, step_size=1, gamma=SCHEDULE_RATE)
         
 
     def sample_policy(self):
@@ -83,6 +90,7 @@ class GaussianVPG(nn.Module):
     #         print(l.grad)
         
     def meta_update(self, memory):
+        
         print("meta update", len(memory.rewards))
 
         discounted_reward = []
@@ -127,6 +135,8 @@ class GaussianVPG(nn.Module):
         # self.update += 1
         # if self.update % self.update_prior_every:
         self.policy_hub.update_prior()
+        if self.schedule == "linear":
+            self.meta_scheduler.step()
 
     def meta_update_with_model(self, models, state, maxiter=3):
         # generate a copy of the policy distribution

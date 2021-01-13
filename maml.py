@@ -44,6 +44,7 @@ parser.add_argument('--tau', type=float, default=0.5)  # need to tune
 # learner settings
 parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
+parser.add_argument('--schedule', type=str, default="linear", help="linear, constant")
 parser.add_argument('--update_every', type=int, default=300)
 parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
 parser.add_argument('--hiddens', nargs='+', type=int)
@@ -122,7 +123,8 @@ if __name__ == '__main__':
 
     if learner == "vpg":
         actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes,
-                           activation=activation, gamma=gamma, device=device, learning_rate=lr, with_meta=True)
+                           activation=activation, gamma=gamma, device=device, learning_rate=lr, 
+                           with_meta=True, schedule=args.schedule)
 
     meta_memory = Memory()
     for sample in range(samples):
@@ -155,11 +157,13 @@ if __name__ == '__main__':
                 state = new_state
 
                 if done or steps == max_steps - 1:
+                    # obtain policy_m and apply gradient descent
+                    # print("sample: {}, episode: {}, total reward: {}".format(
+                    #     sample, episode, np.round(np.sum(rewards), decimals=3)))
                     rew_file.write("sample: {}, episode: {}, total reward: {}\n".format(
                         sample, episode, np.round(np.sum(rewards), decimals=3)))
                     break
 
-        # obtain policy_m and apple gradient descent
         policy_m = actor_policy.update_policy_m(memory)
         memory.clear_memory()
 
