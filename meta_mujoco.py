@@ -49,6 +49,7 @@ parser.add_argument('--tau', type=float, default=0.5)  # need to tune
 # learner settings
 parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
+parser.add_argument('--schedule', type=str, default="linear", help="linear, constant")
 parser.add_argument('--update_every', type=int, default=300)
 parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
 parser.add_argument('--hiddens', nargs='+', type=int)
@@ -145,7 +146,7 @@ if __name__ == '__main__':
         print("-----initialize meta policy-------")
         meta_policy = GaussianVPG(env.observation_space, env.action_space, meta_update_every,
                 hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, 
-                learning_rate=lr, coeff=coeff, tau=tau)
+                learning_rate=lr, coeff=coeff, tau=tau, schedule=args.schedule)
         
     meta_memory = Memory()
     for sample in range(samples):
