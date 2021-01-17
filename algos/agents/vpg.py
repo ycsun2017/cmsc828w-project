@@ -18,7 +18,7 @@ SCHEDULE_RATE = 0.9
 class VPG(nn.Module):
     def __init__(self, state_space, action_space, hidden_sizes=(64,64), activation=nn.Tanh, 
         learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False, 
-        with_meta = False, schedule="constant"):
+        with_meta = False, schedule="constant", decay_every=1):
         super(VPG, self).__init__()
         
         # deal with 1d state input
@@ -52,7 +52,7 @@ class VPG(nn.Module):
         self.schedule = schedule
         if self.schedule == "linear":
             print("linear rate")
-            self.meta_scheduler = StepLR(self.optimizer, step_size=1, gamma=SCHEDULE_RATE)
+            self.meta_scheduler = StepLR(self.optimizer, step_size=decay_every, gamma=SCHEDULE_RATE)
 
         if with_model:
             self.model_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
