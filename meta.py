@@ -10,6 +10,7 @@ from algos.memory import Memory
 from algos.agents.vpg import VPG
 from algos.agents.ppo import PPO
 from algos.agents.gaussian_vpg import GaussianVPG
+from algos.agents.gaussian_ppo import GaussianPPO
 from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
 from envs.new_lunar_lander import NewLunarLander
@@ -32,6 +33,8 @@ parser.add_argument('--episodes', type=int, default=10)
 parser.add_argument('--steps', type=int, default=300)
 parser.add_argument('--goal', type=float, default=0.5) 
 parser.add_argument('--seed', default=1, type=int)
+parser.add_argument('--mass', type=float, default=1.0) 
+
 
 # meta settings
 parser.add_argument('--meta', dest='meta', action='store_true')
@@ -50,7 +53,7 @@ parser.add_argument('--hiddens', nargs='+', type=int)
 
 # file settings
 parser.add_argument('--logdir', type=str, default="logs/")
-parser.add_argument('--resdir', type=str, default="results_peihong/")
+parser.add_argument('--resdir', type=str, default="results_zz/")
 parser.add_argument('--moddir', type=str, default="models/")
 parser.add_argument('--loadfile', type=str, default="")
 
@@ -68,14 +71,14 @@ def get_log(file_name):
     logger.addHandler(fh)  
     return logger
 
-def make_env(seed):
+def make_cart_env(seed):
     # need to tune
-    # mass = 0.1 * np.random.randn() + 1.0
-    # print("a new env of mass:", mass)
-    # env = NewCartPoleEnv(masscart=mass)
-    goal = args.goal * np.random.randn() + 0.0
-    print("a new env of goal:", goal)
-    env = NewCartPoleEnv(goal=goal)
+    mass = 0.1 * np.random.randn() + args.mass 
+    print("a new env of mass:", mass)
+    env = NewCartPoleEnv(masscart=mass)
+    # goal = args.goal * np.random.randn() + 0.0
+    # print("a new env of goal:", goal)
+    # env = NewCartPoleEnv(goal=goal)
     # check_env(env, warn=True)
     return env
 
@@ -118,8 +121,9 @@ if __name__ == '__main__':
     torch.cuda.empty_cache()
     ########## file related 
     filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
-        + "_every" + str(meta_update_every) \
-        + "_size" + str(hidden_sizes[0]) + "_c" + str(coeff) + "_tau" + str(tau)
+        + "_every" + str(meta_update_every) + "_goal" + str(args.goal)\
+        + "_size" + str(hidden_sizes[0]) + "_c" + str(coeff) + "_tau" + str(tau)\
+		+ "_mass" + str(args.mass)
     if not use_meta:
         filename += "_nometa"
     if args.run >=0:
@@ -136,6 +140,14 @@ if __name__ == '__main__':
         meta_policy = GaussianVPG(env.observation_space, env.action_space, meta_update_every,
                 hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, 
                 learning_rate=lr, coeff=coeff, tau=tau)
+
+
+    if learner == "ppo":
+        print("-----initialize meta policy-------")
+        meta_policy = GaussianPPO(env.observation_space, env.action_space, meta_update_every,
+                hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, 
+                learning_rate=lr, coeff=coeff, tau=tau)
+
         
     meta_memory = Memory()
     for sample in range(samples):
@@ -178,6 +190,12 @@ if __name__ == '__main__':
         ######### single-task learning
         if learner == "vpg":
             actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes, 
+            activation=activation, gamma=gamma, device=device, learning_rate=lr)
+            if use_meta:
+                actor_policy.set_params(sample_policy)
+
+        if learner == "ppo":
+            actor_policy = PPO(env.observation_space, env.action_space, hidden_sizes=hidden_sizes, 
             activation=activation, gamma=gamma, device=device, learning_rate=lr)
             if use_meta:
                 actor_policy.set_params(sample_policy)
