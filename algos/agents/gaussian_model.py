@@ -129,6 +129,14 @@ class CloneLinear(nn.Module):
     def forward(self, input):
         return F.linear(input, self.weight, self.bias)
 
+def mlp(sizes, activation, output_activation=nn.Identity()):
+    layers = []
+    for j in range(len(sizes)-1):
+        act = activation() if j < len(sizes)-2 else output_activation
+        layers += [nn.Linear(sizes[j], sizes[j+1]), act]
+
+    return nn.Sequential(*layers)
+
 def gaussian_mlp(sizes, activation, output_activation=nn.Identity(), device="cpu"):
     layers = []
     for j in range(len(sizes)-1):
@@ -147,7 +155,7 @@ def sample_mlp(prior, sizes, activation, output_activation=nn.Identity()):
     return nn.Sequential(*layers)
 
 class PolicyHub(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, tau, device):
+    def __init__(self, state_dim, action_dim, hidden_sizes, activation, algo, tau, device):
         super(PolicyHub, self).__init__()
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -163,6 +171,8 @@ class PolicyHub(nn.Module):
         # actor
         self.gaussian_policy_layers = gaussian_mlp([self.state_dim] + self.hid + [self.action_dim], 
             self.activation, nn.Softmax(dim=-1), self.device)
+
+        self.algo = algo 
         # for i, layer in enumerate(self.gaussian_policy_layers):
         #     print(i, "mu:", layer.weight_mu)
         #     print(i, "rho:", layer.weight_rho)
@@ -182,15 +192,25 @@ class PolicyHub(nn.Module):
         return weights, biases
     
     def sample_policy(self, device):
-        return SampleActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
+        if self.algo in ['GaussianVPG']:
+            out = SampleActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
             self.hidden_sizes, self.activation).to(device)
+        if self.algo in ['GaussianPPO']:
+            out = SampleActorCritic(self.gaussian_policy_layers, self.state_dim, self.action_dim,
+            self.hidden_sizes, self.activation).to(device) 
+        return out 
         # sample_mlp(self.gaussian_policy_layers, [self.state_dim] + self.hid + [self.action_dim], 
             # self.activation, nn.Softmax(dim=-1))
     
     def sample_cont_policy(self, action_std, device):
-        return SampleContActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
-            self.hidden_sizes, self.activation, action_std, device).to(device)
-    
+        if self.algo in ['GaussianVPG']:
+            out = SampleContActor(self.gaussian_policy_layers, self.state_dim, self.action_dim,
+                self.hidden_sizes, self.activation, action_std, device).to(device)
+        if self.algo in ['GaussianPPO']:
+            out = SampleContActorCritic(self.gaussian_policy_layers, self.state_dim, self.action_dim,
+                self.hidden_sizes, self.activation, action_std, device).to(device)
+        return out 
+        
     def get_parameters(self):
         params = []
         for layer in self.gaussian_policy_layers:
@@ -361,21 +381,23 @@ class QValue(nn.Module):
         return torch.squeeze(q, -1) # Critical to ensure q has right shape.
 
 
-class ActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation):
-        super(ActorCritic, self).__init__()
+class SampleActorCritic(nn.Module):
+    def __init__(self, prior, state_dim, action_dim, hidden_sizes, activation):
+        super(SampleActorCritic, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
         else:
             hid = list(hidden_sizes)
         # actor
         self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
-        
+        self.action_layer = sample_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Softmax(dim=-1))
+
+
         # critic
         self.value_layer = mlp([state_dim] + hid + [1], activation)
         
-    def forward(self):
-        raise NotImplementedError
+    # def forward(self):
+    #     raise NotImplementedError
         
     def act(self, state, device):
         state = torch.from_numpy(state).float().to(device) 
@@ -412,24 +434,24 @@ class ActorCritic(nn.Module):
         return action_logprobs, torch.squeeze(state_value), dist_entropy
     
     
-class ContActorCritic(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_sizes, activation, action_std, device):
-        super(ContActorCritic, self).__init__()
+class SampleContActorCritic(nn.Module):
+    def __init__(self, prior, state_dim, action_dim, hidden_sizes, activation, action_std, device):
+        super(SampleContActorCritic, self).__init__()
         if type(hidden_sizes) == int:
             hid = [hidden_sizes]
         else:
             hid = list(hidden_sizes)
             
         # action mean range -1 to 1
-        self.action_layer = mlp([state_dim] + hid + [action_dim], activation, nn.Tanh())
+        self.action_layer = sample_mlp(prior, [state_dim] + hid + [action_dim], activation, nn.Tanh())
         self.action_var = torch.full((action_dim,), action_std*action_std).to(device)
         # critic
         self.value_layer = mlp([state_dim] + hid + [1], activation)
         
         self.device = device
         
-    def forward(self):
-        raise NotImplementedError
+    # def forward(self):
+    #     raise NotImplementedError
     
     def act(self, state, device):
         state = torch.from_numpy(state).float().to(device) 

@@ -13,19 +13,15 @@ from .gaussian_model import PolicyHub
 from .updates import vpg_update
 from algos.memory import Memory
 from torch.distributions import Categorical
-from torch.optim.lr_scheduler import StepLR
 
-SCHEDULE_RATE = 0.9
-
-class GaussianVPG(nn.Module):
+class GaussianPPO(nn.Module):
     """
     A meta policy (maintaining a gaussian distribution of policies)
     """
     def __init__(self, state_space, action_space, sample_size, hidden_sizes=(4,4), 
                  activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", 
-                 action_std=0.5, delta=0.1, coeff=1.0, tau=0.5, schedule="linear", 
-                 decay_every=1):
-        super(GaussianVPG, self).__init__()
+                 action_std=0.5, delta=0.1, coeff=1.0, tau=0.5):
+        super(GaussianPPO, self).__init__()
         
         # deal with 1d state input
         state_dim = state_space.shape[0]
@@ -46,19 +42,15 @@ class GaussianVPG(nn.Module):
         if isinstance(action_space, Discrete):
             self.cont_action = False
             self.action_dim = action_space.n
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, type(self).__name__, tau, self.device)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation,  type(self).__name__, tau, self.device)
             
         elif isinstance(action_space, Box):
             self.cont_action = True
             self.action_dim = action_space.shape[0]
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, type(self).__name__, tau, self.device)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation,  type(self).__name__, tau, self.device)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
-        
-        self.schedule = schedule
-        if self.schedule == "linear":
-            print("linear rate")
-            self.meta_scheduler = StepLR(self.meta_optimizer, step_size=decay_every, gamma=SCHEDULE_RATE)
+
         
 
     def sample_policy(self):
@@ -91,12 +83,7 @@ class GaussianVPG(nn.Module):
     #         print(l.grad)
         
     def meta_update(self, memory):
-
         print("meta update", len(memory.rewards))
-        # vpg_update(self.meta_optimizer, memory.logprobs, memory.rewards, memory.is_terminals, self.gamma)
-        states = torch.stack(memory.states).to(self.device).detach()
-        actions = torch.stack(memory.actions).to(self.device).detach()
-        old_logprobs = torch.stack(memory.logprobs).to(self.device).detach()
 
         discounted_reward = []
         Gt = 0
@@ -110,51 +97,36 @@ class GaussianVPG(nn.Module):
         # discounted_reward = torch.tensor(discounted_reward).to(self.device)
         # discounted_reward = (discounted_reward - discounted_reward.mean()) / (discounted_reward.std() + 1e-5)
         # print("old param", self.policy_hub.get_parameters())
-        
         policy_gradient = []
         for log_prob, Gt in zip(memory.logprobs, discounted_reward):
             policy_gradient.append(-log_prob * Gt)
+        # print("policy gradient", len(policy_gradient))
+        
+        # regularizer
+        # regularize_loss = []
+        # ori_params = self.policy_hub.get_parameters().detach().clone()
+        # cur_params = self.policy_hub.get_parameters()
+        # for p, c in zip(ori_params, cur_params):
+        #     regularize_loss.append(torch.sum(p-c))
+        # print(regularize_loss)
         regularize_loss = self.policy_hub.regularize_loss()
-        # print("reg loss", regularize_loss)
+        print("reg loss", regularize_loss)
         regularize_loss = torch.sqrt((regularize_loss+self.log_term)/(2*self.N))
         print("reg loss", regularize_loss)
         self.meta_optimizer.zero_grad()
         loss = self.coeff * torch.stack(policy_gradient).sum() + regularize_loss
         print("loss", loss)
-        loss.backward(retain_graph=True)
+        loss.backward()
+        # print("grad", self.policy_hub.gaussian_policy_layers[0].weight_mu.grad)
+        # for param in self.policy_hub.get_parameters():
+        #     print("grad", param.grad)
         self.meta_optimizer.step()
-
-        discounted_reward = torch.tensor(discounted_reward).to(self.device)
-        for epoch in range(1):
-            new_logprobs = self.cur_policy.act_prob(states, actions, self.device)
-            # print(new_logprobs)
-            # Finding the ratio (pi_theta / pi_theta__old):
-            ratios = torch.exp(new_logprobs - old_logprobs.detach())
-                
-            # Finding Surrogate Loss:
-            loss1 = - ratios * discounted_reward
-            loss2 = self.policy_hub.regularize_loss()
-            
-            loss2 = torch.sqrt((loss2+self.log_term)/(2*self.N))
-            loss = self.coeff*loss1.sum() + loss2
-            # loss = (self.coeff * loss1 + loss2).mean()
-            print("loss", loss)
-            self.meta_optimizer.zero_grad()
-            loss.backward(retain_graph=True)
-            # print("grad", self.policy_hub.gaussian_policy_layers[0].weight.mu.grad)
-            self.meta_optimizer.step()
-            self.cur_policy = self.sample_policy()
-
-        #
-
         # print("new param", self.policy_hub.get_parameters())
         # print("new mu", self.policy_hub.gaussian_policy_layers[0].weight.mu)
 
         # self.update += 1
         # if self.update % self.update_prior_every:
         self.policy_hub.update_prior()
-        if self.schedule == "linear":
-            self.meta_scheduler.step()
 
     def meta_update_with_model(self, models, state, maxiter=3):
         # generate a copy of the policy distribution
