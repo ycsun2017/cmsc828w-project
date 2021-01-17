@@ -14,14 +14,14 @@ from .updates import vpg_update
 from algos.memory import Memory
 from torch.distributions import Categorical
 
-class GaussianVPG(nn.Module):
+class GaussianPPO(nn.Module):
     """
     A meta policy (maintaining a gaussian distribution of policies)
     """
     def __init__(self, state_space, action_space, sample_size, hidden_sizes=(4,4), 
                  activation=nn.Tanh, learning_rate=3e-4, gamma=0.9, device="cpu", 
                  action_std=0.5, delta=0.1, coeff=1.0, tau=0.5):
-        super(GaussianVPG, self).__init__()
+        super(GaussianPPO, self).__init__()
         
         # deal with 1d state input
         state_dim = state_space.shape[0]
@@ -42,12 +42,12 @@ class GaussianVPG(nn.Module):
         if isinstance(action_space, Discrete):
             self.cont_action = False
             self.action_dim = action_space.n
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, type(self).__name__, tau, self.device)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation,  type(self).__name__, tau, self.device)
             
         elif isinstance(action_space, Box):
             self.cont_action = True
             self.action_dim = action_space.shape[0]
-            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation, type(self).__name__, tau, self.device)
+            self.policy_hub = PolicyHub(state_dim, self.action_dim, hidden_sizes, activation,  type(self).__name__, tau, self.device)
         # print(self.policy_hub.get_parameters())
         self.meta_optimizer = optim.SGD(self.policy_hub.get_parameters(), lr=self.learning_rate)
 
