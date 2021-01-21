@@ -17,6 +17,10 @@ from envs.half_cheetah_rand_dir import HalfCheetahEnvRandDir
 from envs.hopper_rand_dir import HopperEnvRandDir
 from envs.hopper_rand_goal import HopperEnvRandGoal
 from envs.hopper_rand_vel import HopperEnvRandVel
+from envs.half_cheetah_rand_vel import HalfCheetahEnvRandVel
+from envs.ant_rand_dir import AntEnvRandDir
+from envs.ant_rand_goal import AntEnvRandGoal
+from envs.ant_rand_vel import AntEnvRandVel
 # from stable_baselines.common.env_checker import check_env
 
 import logging
@@ -51,6 +55,8 @@ parser.add_argument('--tau', type=float, default=0.5)  # need to tune
 # learner settings
 parser.add_argument('--learner', type=str, default="vpg", help="vpg, ppo, sac")
 parser.add_argument('--lr', type=float, default=1e-4)
+parser.add_argument('--decay_every', type=int, default=1)
+parser.add_argument('--schedule', type=str, default="linear", help="linear, constant")
 parser.add_argument('--update_every', type=int, default=300)
 parser.add_argument('--meta_update_every', type=int, default=50)  # need to tune
 parser.add_argument('--hiddens', nargs='+', type=int)
@@ -89,8 +95,16 @@ def make_cart_env(seed):
 def make_mujoco_env(env="Swimmer"):
     if env == "Swimmer":
         env = SwimmerEnvRandVel()
-    elif env == "Antdir":
+    elif env == "Halfcdir":
         env = HalfCheetahEnvRandDir()
+    elif env == "Halfcvel":
+        env = HalfCheetahEnvRandVel()
+    elif env == "Antdir":
+        env = AntEnvRandDir()
+    elif env == "Antgol":
+        env = AntEnvRandGoal()
+    elif env == "Antvel":
+        env = AntEnvRandVel()
 #     check_env(env, warn=True)
     elif env == "Hopperdir":
         env= HopperEnvRandDir()
@@ -129,7 +143,8 @@ if __name__ == '__main__':
     ########## file related 
     filename = env_name + "_" + learner + "_s" + str(samples) + "_n" + str(max_episodes) \
         + "_every" + str(meta_update_every) \
-        + "_size" + str(hidden_sizes[0]) + "_c" + str(coeff) + "_tau" + str(tau)
+        + "_size" + str(hidden_sizes[0]) + "_c" + str(coeff) + "_tau" + str(tau) \
+        + "_decay" + str(args.decay_every)
     if not use_meta:
         filename += "_nometa"
     if args.run >=0:
@@ -147,7 +162,7 @@ if __name__ == '__main__':
         print("-----initialize meta policy-------")
         meta_policy = GaussianVPG(env.observation_space, env.action_space, meta_update_every,
                 hidden_sizes=hidden_sizes, activation=activation, gamma=gamma, device=device, 
-                learning_rate=lr, coeff=coeff, tau=tau)
+                learning_rate=lr, coeff=coeff, tau=tau, schedule=args.schedule, decay_every=args.decay_every)
         
     meta_memory = Memory()
     for sample in range(samples):

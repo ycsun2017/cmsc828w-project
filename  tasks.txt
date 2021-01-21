@@ -1,41 +1,11 @@
-I. code:
-1. continuous --> Yanchao
-2. maml --> Peihong
-3. algorithm 2
+updates:
 
-ii. experiment:
-1. Cartpole. (tuning done) (multiple env settings) 
-(1) different goals. --> Yanchao (2) different physics (e.g. mass, length) --> Zhang Zhi
+1. adjust learning rate for our method and maml --> increasing stability
+2. change optimizer for maml --> improving performance significantly
+3. change the criterion: performance of single-task learner with a few episodes
+4. parameters test
+5. more samples
 
-2. LunarLander. --> Jingxi
-
-3. Mojuco. --> Yanchao Peihong Zhi Jingxi
-1) parameter tuning
-2) different env settings
-
-3. baseline. (maml)
-4. (optional) algorithm 2
-
-III. result we need to show:
-(every set of exp needs to be run for multiple runs (at least 10))
-
-plot: mean reward vs samples -- in different envs
-4 lines: our1, our2, maml, no_meta
-
-(optional) different meta_update_every: our1
-
-
-
-
-for peihong:
-
-initialize meta policy theta (VPG)
-use theta to sample trajectories
-use trajectories to compute gradient \grad{theta}  
-loss.backward(retain_graph=True); theta.grad 
-theta_i = (theta + alpha * grad{theta}).clone()
-sample new trajectories 
-backward() -> \grad{theta}  
 
 
 

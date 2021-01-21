@@ -11,10 +11,14 @@ from .model import Actor, ContActor, Dynamics
 from .updates import vpg_update
 from torch.distributions import Categorical
 from .gaussian_model import hard_update
+from torch.optim.lr_scheduler import StepLR
+
+SCHEDULE_RATE = 0.9
 
 class VPG(nn.Module):
     def __init__(self, state_space, action_space, hidden_sizes=(64,64), activation=nn.Tanh, 
-        learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False):
+        learning_rate=3e-4, gamma=0.9, device="cpu", action_std=0.5, with_model=False, 
+        with_meta = False, schedule="constant", decay_every=1):
         super(VPG, self).__init__()
         
         # deal with 1d state input
@@ -37,7 +41,18 @@ class VPG(nn.Module):
             if with_model:
                 self.model = Dynamics(state_dim, self.action_dim, hidden_sizes, activation, self.device).to(self.device)
 
-        self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
+        self.state_dim = state_dim
+        self.action_space = action_space
+        self.hidden_sizes = hidden_sizes
+        self.action_std = action_std
+        self.activation = activation
+        self.lr = learning_rate
+        self.optimizer = optim.SGD(self.policy.parameters(), lr=learning_rate)
+        
+        self.schedule = schedule
+        if self.schedule == "linear":
+            print("linear rate")
+            self.meta_scheduler = StepLR(self.optimizer, step_size=decay_every, gamma=SCHEDULE_RATE)
 
         if with_model:
             self.model_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
@@ -46,12 +61,39 @@ class VPG(nn.Module):
     
     def act(self, state):
         return self.policy.act(state, self.device)
-        
+
+    def act_policy_m(self, state):
+        return self.policy_m.act(state, self.device)
+
+    # def update_policy(self, memory):
+    #     discounted_reward = []
+    #     Gt = 0
+    #     for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+    #         if is_terminal:
+    #             Gt = 0
+    #         Gt = reward + (self.gamma * Gt)
+    #         discounted_reward.insert(0, Gt)
+    #
+    #     # Normalizing the rewards:
+    #     #        rewards = torch.tensor(rewards).to(self.device)
+    #     #        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
+    #
+    #     policy_gradient = []
+    #     for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+    #         policy_gradient.append(-log_prob * Gt)
+    #
+    #     self.optimizer.zero_grad()
+    #     policy_gradient = torch.stack(policy_gradient).sum()
+    #     policy_gradient.backward()
+    #     self.optimizer.step()
     
     def update_policy(self, memory):
-        
+
         vpg_update(self.optimizer, memory.logprobs, memory.rewards, memory.is_terminals, self.gamma)
-        
+        if self.schedule == "linear":
+            self.meta_scheduler.step()
+
+        # print(self.policy.action_layer[0].bias)
 #        rewards = []
 #        discounted_reward = 0
 #        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
@@ -59,19 +101,52 @@ class VPG(nn.Module):
 #                discounted_reward = 0
 #            discounted_reward = reward + (self.gamma * discounted_reward)
 #            rewards.insert(0, discounted_reward)
-#        
+       
 #        # Normalizing the rewards:
-##        rewards = torch.tensor(rewards).to(self.device)
-##        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
-#        
+# #        rewards = torch.tensor(rewards).to(self.device)
+# #        rewards = (rewards - rewards.mean()) / (rewards.std() + 1e-5)
+       
 #        policy_gradient = []
 #        for log_prob, Gt in zip(memory.logprobs, rewards):
 #            policy_gradient.append(-log_prob * Gt)
-#        
+# #        
 #        self.optimizer.zero_grad()
 #        policy_gradient = torch.stack(policy_gradient).sum()
 #        policy_gradient.backward()
 #        self.optimizer.step()
+
+    def update_policy_m(self, memory):
+        # caculate policy gradient
+        discounted_reward = []
+        Gt = 0
+        for reward, is_terminal in zip(reversed(memory.rewards), reversed(memory.is_terminals)):
+            if is_terminal:
+                Gt = 0
+            Gt = reward + (self.gamma * Gt)
+            discounted_reward.insert(0, Gt)
+
+        policy_gradient = []
+        for log_prob, Gt in zip(memory.logprobs, discounted_reward):
+            policy_gradient.append(-log_prob * Gt)
+
+        self.optimizer.zero_grad()
+        policy_gradient = torch.stack(policy_gradient).sum()
+        policy_gradient.backward()
+
+        # create policy_m
+        if isinstance(self.action_space, Discrete):
+            policy_m = Actor(self.state_dim, self.action_dim, self.hidden_sizes, self.activation, with_clone=True,
+                                  prior=self.policy.action_layer, lr = self.lr).to(self.device)
+        elif isinstance(self.action_space, Box):
+            policy_m = ContActor(self.state_dim, self.action_dim, self.hidden_sizes, self.activation, self.action_std,
+                                      self.device, with_clone=True, prior=self.policy.action_layer, lr = self.lr).to(self.device)
+
+        # for layer, layer_m in zip(self.policy.action_layer, policy_m.action_layer):
+        #     if type(layer) == nn.Linear:
+        #         layer_m.weight = (layer_m.weight - self.lr * layer.weight.grad).clone()
+        #         layer_m.bias = (layer_m.bias - self.lr * layer.bias.grad).clone()
+
+        return policy_m
 
     def update_model(self, op_memory, batchsize=256):
         states, actions, rewards, next_states, dones = op_memory.sample(batchsize)
@@ -113,5 +188,3 @@ class VPG(nn.Module):
                 hard_update(layer.bias, sample_layer.bias)
                 # print("layer.weight", layer.weight)
                 # print("sample_layer.weight", sample_layer.weight)
-        
-        

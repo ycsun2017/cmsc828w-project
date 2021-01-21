@@ -1,0 +1,628 @@
+Thu Nov 12 11:32:40 PST 2020
+
+CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.
+To initialize your shell, run
+
+    $ conda init <SHELL_NAME>
+
+Currently supported shells are:
+  - bash
+  - fish
+  - tcsh
+  - xonsh
+  - zsh
+  - powershell
+
+See 'conda init --help' for more information and options.
+
+IMPORTANT: You may need to close and restart your shell after running 'conda init'.
+
+
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+Traceback (most recent call last):
+  File "mml_zzz.py", line 1, in <module>
+    import torch
+ImportError: No module named torch
+10
+70
+Thu Nov 12 11:33:32 PST 2020
+Done
+logout
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@ray24>
+Subject: Job 53626: <zz.sh> in cluster <ray> Done
+
+Job <zz.sh> was submitted from host <ray23> by user <zhang65> in cluster <ray> at Thu Nov 12 11:32:33 2020
+Job was executed on host(s) <1*ray24>, in queue <pbatch>, as user <zhang65> in cluster <ray> at Thu Nov 12 11:32:33 2020
+                            <40*ray27>
+                            <40*ray28>
+                            <40*ray53>
+                            <40*ray54>
+</g/g16/zhang65> was used as the home directory.
+</g/g16/zhang65/src/sitepackages/llrl/experiments> was used as the working directory.
+Started at Thu Nov 12 11:32:33 2020
+Terminated at Thu Nov 12 11:34:04 2020
+Results reported at Thu Nov 12 11:34:04 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+##### running script on lc
+#!/bin/bash
+#BSUB -q pbatch 
+#BSUB -G guests 
+#BSUB -W 720
+#BSUB -nnodes 4 
+#BSUB -o /g/g16/zhang65/src/sitepackages/llrl/experiments/log3.txt 
+
+##### These are shell commands
+date
+#source /g/g16/zhang65/.conda/bin/activate
+conda activate py37
+export LD_LIBRARY_PATH=/g/g16/zhang65/.conda/pkgs/cudatoolkit-10.2.89-684.g752c550a/lib:$LD_LIBRARY_PATH
+
+##### Launch parallel job using srun
+##### 
+cd /g/g16/zhang65/src/sitepackages/llrl
+
+timestamp=$(date +%b_%d_%y_%H_%M_%s)
+
+RUNS=10
+eps=(25 50 70)
+masses=(0.5 1 5 10)
+for ((i=0;i<${RUNS};i++));
+do
+  for j in "${eps[@]}";
+  do
+    for k in "${masses[@]}";
+    do
+        jsrun -n 1 -a 1 -g 1 -c 1 python mml_zzz.py --run ${i} --meta_update_every ${j} --mass ${k}
+    done
+    echo $k
+   done 
+  echo $j
+done 
+
+# for seed in 1234 do
+#     for samples in 100 250 500 1000
+#         jsrun -n 1 -a 1 -g 1 -c 1 python meta.py --seed $seed --samples $samples --meta-episodes 10 --coeff 0.5 --meta_update_every 25 
+#     done 
+# done 
+
+date
+echo "Done"
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   0.13 sec.
+    Max Memory :                                 60 MB
+    Average Memory :                             57.00 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   1424 MB
+    Max Processes :                              4
+    Max Threads :                                27
+    Run time :                                   91 sec.
+    Turnaround time :                            91 sec.
+
+The output (if any) is above this job summary.
+
