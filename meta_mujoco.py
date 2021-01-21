@@ -14,6 +14,9 @@ from algos.agents.gaussian_model import PolicyHub
 from envs.new_cartpole import NewCartPoleEnv
 from envs.swimmer_rand_vel import SwimmerEnvRandVel
 from envs.half_cheetah_rand_dir import HalfCheetahEnvRandDir
+from envs.hopper_rand_dir import HopperEnvRandDir
+from envs.hopper_rand_goal import HopperEnvRandGoal
+from envs.hopper_rand_vel import HopperEnvRandVel
 # from stable_baselines.common.env_checker import check_env
 
 import logging
@@ -27,6 +30,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--device', type=str, default="cpu")
 parser.add_argument('--run', type=int, default=-1)
 # env settings
+# parser.add_argument('--env', type=str, default="Hopperdir")
+# parser.add_argument('--env', type=str, default="Hoppergoal")
+# parser.add_argument('--env', type=str, default="Hoppervel")
 parser.add_argument('--env', type=str, default="Swimmer")
 parser.add_argument('--samples', type=int, default=2000) # need to tune
 parser.add_argument('--episodes', type=int, default=10)
@@ -86,6 +92,12 @@ def make_mujoco_env(env="Swimmer"):
     elif env == "Antdir":
         env = HalfCheetahEnvRandDir()
 #     check_env(env, warn=True)
+    elif env == "Hopperdir":
+        env= HopperEnvRandDir()
+    elif env == "Hoppergoal":
+        env= HopperEnvRandGoal()
+    elif env == "Hoppervel":
+        env= HopperEnvRandVel()
     return env
 
 if __name__ == '__main__':
@@ -128,6 +140,8 @@ if __name__ == '__main__':
 
     # env = gym.make(env_name)
     env = make_mujoco_env(env_name)
+
+
 
     if learner == "vpg":
         print("-----initialize meta policy-------")
