@@ -153,7 +153,10 @@ if __name__ == '__main__':
     if learner == "vpg":
         actor_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes,
                            activation=activation, gamma=gamma, device=device, learning_rate=lr, 
-                           with_meta=True, schedule=args.schedule, decay_every=args.decay_every)
+                           schedule=args.schedule, decay_every=args.decay_every)
+    elif learner == "ppo":
+        actor_policy = PPO(env.observation_space, env.action_space, K_epochs=1, hidden_sizes=hidden_sizes,
+                           activation=activation, gamma=gamma, device=device, learning_rate=lr)
 
     meta_memory = Memory()
     for sample in range(samples):
@@ -227,8 +230,11 @@ if __name__ == '__main__':
 
         ######### single-task learning
         if learner == "vpg":
-            single_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes, 
-            activation=activation, gamma=gamma, device=device, learning_rate=lr)
+            single_policy = VPG(env.observation_space, env.action_space, hidden_sizes=hidden_sizes,
+                                activation=activation, gamma=gamma, device=device, learning_rate=lr)
+        elif learner == "ppo":
+            single_policy = PPO(env.observation_space, env.action_space, K_epochs=1, hidden_sizes=hidden_sizes,
+                                activation=activation, gamma=gamma, device=device, learning_rate=lr)
         
         single_policy.set_params(actor_policy.policy)
 
